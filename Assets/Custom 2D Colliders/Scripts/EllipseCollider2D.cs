@@ -50,7 +50,7 @@ public class EllipseCollider2D : MonoBehaviour {
     {
         List<Vector2> points = new List<Vector2>();
 
-		origin = Vector2.zero;//transform.localPosition;
+		origin = Vector2.zero;
         center = origin + off;
         
         float ang = 0;

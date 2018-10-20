@@ -16,6 +16,7 @@ public class CameraFollow : MonoBehaviour {
 	public float LerpMult = 1f;
 	public float DistPerVel = .5f;
 	public float MaxCameraXDist = 2f;
+	public float MaxHeightAbovePlatform = 5f;
 
 	public enum State
 	{
@@ -55,10 +56,14 @@ public class CameraFollow : MonoBehaviour {
 
 			float X = Following.transform.position.x + Mathf.Min(MaxCameraXDist, DistPerVel * Following.GetComponent<Rigidbody2D>().velocity.x);
 
-			if(Following.GetComponent<PlayerController>().WasOnGround() || Following.position.y < platform)
+			if (Following.GetComponent<PlayerController>().WasOnGround() || Following.position.y < platform)
 			{
 				//Debug.Log("Platform Updated");
 				platform = Following.transform.position.y;
+			}
+			else if (Following.position.y > platform + MaxHeightAbovePlatform)
+			{
+				platform = Following.transform.position.y - MaxHeightAbovePlatform;
 			}
 
 			float Y = platform + 1f;

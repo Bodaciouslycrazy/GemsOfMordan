@@ -24,17 +24,17 @@ AnimationClip:
       value: {fileID: 21300038, guid: dcfe9d07107a0ff4d927f856f02184db, type: 3}
     - time: 0.33333334
       value: {fileID: 21300040, guid: dcfe9d07107a0ff4d927f856f02184db, type: 3}
-    - time: 0.5
+    - time: 0.5833333
       value: {fileID: 21300042, guid: dcfe9d07107a0ff4d927f856f02184db, type: 3}
-    - time: 0.6666667
+    - time: 0.75
       value: {fileID: 21300044, guid: dcfe9d07107a0ff4d927f856f02184db, type: 3}
-    - time: 0.8333334
+    - time: 0.9166667
       value: {fileID: 21300046, guid: dcfe9d07107a0ff4d927f856f02184db, type: 3}
     attribute: m_Sprite
     path: 
     classID: 212
     script: {fileID: 0}
-  m_SampleRate: 6
+  m_SampleRate: 12
   m_WrapMode: 0
   m_Bounds:
     m_Center: {x: 0, y: 0, z: 0}
@@ -83,6 +83,13 @@ AnimationClip:
   m_Events:
   - time: 0
     functionName: Punch
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.6666667
+    functionName: ClearInputQueue
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
