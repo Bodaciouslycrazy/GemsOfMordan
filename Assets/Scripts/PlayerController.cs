@@ -25,7 +25,6 @@ public class PlayerController : MonoBehaviour, IDamageable {
 
 	private float Horizontal = 0f;
 	private float Vertical = 0f;
-	//private bool pressedJump = false;
 	private bool heldJump = false;
 	private bool floating = false;
 
@@ -79,19 +78,18 @@ public class PlayerController : MonoBehaviour, IDamageable {
 			QueuedActionTime = Time.time;
 		}
 		heldJump = Input.GetButton("Jump");
+
+		//UPDATE THESE TO AVERAGE OVER ULTIPLE FRAMES?
 		Horizontal = Input.GetAxisRaw("Horizontal");
 		Vertical = Input.GetAxisRaw("Vertical");
 
-
-
-		//Update all the animations!
-		/*
-		if (Horizontal > 0 && !facingRight && rb.velocity.x > 0)
+		
+		if (Horizontal > 0 && !facingRight && rb.velocity.x > 0 && CurrentPState != PState.ATTACKING)
 		{
 			facingRight = true;
 			sr.flipX = false;
 		}
-		else if (Horizontal < 0 && facingRight && rb.velocity.x < 0)
+		else if (Horizontal < 0 && facingRight && rb.velocity.x < 0 && CurrentPState != PState.ATTACKING)
 		{
 			facingRight = false;
 			sr.flipX = true;
@@ -116,6 +114,8 @@ public class PlayerController : MonoBehaviour, IDamageable {
 			//Debug.Log("Accel = -1");
 		}
 
+		anim.SetBool("Falling", rb.velocity.y < 0);
+		/*
 		//Should probably not have this in Update() ?
 		if (Input.GetButtonDown("Attack"))
 		{
@@ -169,9 +169,19 @@ public class PlayerController : MonoBehaviour, IDamageable {
 
 		//Do state transitions!
 		if (groundThisFrame && CurrentPState == PState.IN_AIR)
+		{
 			CurrentPState = PState.WALKING;
+			//anim.SetTrigger("Land");
+			anim.SetBool("OnGround", true);
+			//Debug.Log("SET LAND");
+		}
 		else if (!groundThisFrame && CurrentPState == PState.WALKING)
+		{
 			CurrentPState = PState.IN_AIR;
+			//anim.SetTrigger("Jump");
+			anim.SetBool("OnGround", false);
+			//Debug.Log("SET JUMP");
+		}
 
 
 		//Now that we have completed the action queue, do movement!
@@ -217,6 +227,22 @@ public class PlayerController : MonoBehaviour, IDamageable {
 				accelY = dvy / Time.fixedDeltaTime;
 			}
 		}
+		else if(CurrentPState == PState.ATTACKING)
+		{
+			if(groundThisFrame)
+			{
+				//accel to a stop
+				float targetXVel = 0;
+				float dv = targetXVel - rb.velocity.x;
+				accelX = dv / Time.fixedDeltaTime;
+
+				if (accelX > GroundAccel)
+					accelX = GroundAccel;
+				else if (accelX < -GroundAccel)
+					accelX = -GroundAccel;
+			}
+		}
+
 		rb.AddForce(new Vector2(accelX * rb.mass, accelY * rb.mass), ForceMode2D.Force);
 
 		//Update ground variables!
@@ -239,8 +265,11 @@ public class PlayerController : MonoBehaviour, IDamageable {
 			//onGround = false;
 			floating = true;
 			//ignoreGround = true;
-			anim.SetTrigger("Jump");
-			CurrentPState = PState.IN_AIR;
+
+			//This anim trigger is not needed. Jump is triggered in FixedUpdate() when the floor is not detected.
+			//This is same with switching to the IN_AIR PState
+			//anim.SetTrigger("Jump");
+			//CurrentPState = PState.IN_AIR;
 		}
 	}
 
@@ -252,7 +281,9 @@ public class PlayerController : MonoBehaviour, IDamageable {
 			vel.y = PunchVerticalVel;
 			rb.velocity = vel;
 		}
-		
+
+		CurrentPState = PState.ATTACKING;
+		anim.SetTrigger("Punch");
 
 		float xoffset = 0.7f * (facingRight ? 1 : -1);
 		Vector2 pos = (Vector2)transform.position + new Vector2( xoffset, -.1f );
@@ -275,6 +306,14 @@ public class PlayerController : MonoBehaviour, IDamageable {
 
 			enemyHealth.Hurt(1);
 		}
+	}
+
+	public void EndAttack()
+	{
+		if (groundThisFrame)
+			CurrentPState = PState.WALKING;
+		else
+			CurrentPState = PState.IN_AIR;
 	}
 
 

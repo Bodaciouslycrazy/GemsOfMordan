@@ -273,7 +273,7 @@ MonoBehaviour:
   GroundAngleTolerance: 0.01
   JumpHeight: 4.5
   JumpCancelAccel: 80
-  PunchVerticalVel: 6
+  PunchVerticalVel: 2
   MaxQueueTime: 0.1
 --- !u!114 &202223002
 MonoBehaviour:
