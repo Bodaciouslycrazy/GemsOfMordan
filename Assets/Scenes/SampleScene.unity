@@ -268,12 +268,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxSpeed: 4.5
-  GroundAccel: 20
-  AirAccel: 10
+  GroundAccel: 26
+  AirAccel: 14
   GroundAngleTolerance: 0.01
   JumpHeight: 4.5
   JumpCancelAccel: 80
-  PunchVerticalVel: 2
+  PunchVerticalVel: 2.5
+  PunchMaxHorzVel: 0.75
   MaxQueueTime: 0.1
 --- !u!114 &202223002
 MonoBehaviour:

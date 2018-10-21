@@ -12,7 +12,10 @@ public class PlayerController : MonoBehaviour, IDamageable {
 	public float GroundAngleTolerance = .01f;
 	public float JumpHeight = 8f;
 	public float JumpCancelAccel = 100f;
+
+	[Header("BasicAttackVariables")]
 	public float PunchVerticalVel = 1f;
+	public float PunchMaxHorzVel = 1f;
 
 	//************************
 	//   PRIVATE VARIABLES
@@ -25,8 +28,10 @@ public class PlayerController : MonoBehaviour, IDamageable {
 
 	private float Horizontal = 0f;
 	private float Vertical = 0f;
+	private int NumInputsStored = 0;
 	private bool heldJump = false;
 	private bool floating = false;
+	private bool Attacking = false;
 
 	//On ground stuff
 	private bool groundThisFrame = true;
@@ -36,6 +41,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 	[Header("ActionQueue")]
 	public float MaxQueueTime = .3f;
 	private EnumAction QueuedAction = EnumAction.NONE;
+	private EnumDir QueuedActionDirection = EnumDir.N;
 	private float QueuedActionTime = 0f;
 	enum EnumAction
 	{
@@ -45,13 +51,24 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		SPECIAL_ATTACK
 	}
 
+	enum EnumDir
+	{
+		CENTER,
+		N,
+		NE,
+		E,
+		SE,
+		S,
+		SW,
+		W,
+		NW
+	}
 	//Player State stuff
 	private PState CurrentPState = PState.WALKING;
 	enum PState
 	{
 		WALKING,
-		IN_AIR,
-		ATTACKING,
+		IN_AIR
 	}
 
 
@@ -67,6 +84,24 @@ public class PlayerController : MonoBehaviour, IDamageable {
 	// Update is called once per frame
 	void Update () {
 		//UPDATE INPUTS
+		//UPDATE THESE TO AVERAGE OVER MULTIPLE FRAMES
+		float RawHorz = Input.GetAxisRaw("Horizontal");
+		float RawVert = Input.GetAxisRaw("Vertical");
+
+		if (NumInputsStored == 0)
+		{
+			Horizontal = RawHorz;
+			Vertical = RawVert;
+		}
+		else
+		{
+			Horizontal = (NumInputsStored * Horizontal + RawHorz) / (NumInputsStored + 1);
+			Vertical = (NumInputsStored * Vertical + RawVert) / (NumInputsStored + 1);
+		}
+		NumInputsStored++;
+		heldJump = Input.GetButton("Jump");
+
+		//UPDATE ACTION BASED INPUTS
 		if (Input.GetButtonDown("Jump"))
 		{
 			QueuedAction = EnumAction.JUMP;
@@ -75,21 +110,24 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		else if (Input.GetButtonDown("Attack"))
 		{
 			QueuedAction = EnumAction.BASIC_ATTACK;
+			QueuedActionDirection = GetDirection(RawHorz, RawVert);
 			QueuedActionTime = Time.time;
 		}
-		heldJump = Input.GetButton("Jump");
-
-		//UPDATE THESE TO AVERAGE OVER ULTIPLE FRAMES?
-		Horizontal = Input.GetAxisRaw("Horizontal");
-		Vertical = Input.GetAxisRaw("Vertical");
+		else if(Input.GetButtonDown("Special"))
+		{
+			QueuedAction = EnumAction.SPECIAL_ATTACK;
+			QueuedActionDirection = GetDirection(RawHorz, RawVert);
+			QueuedActionTime = Time.time;
+		}
+		
 
 		
-		if (Horizontal > 0 && !facingRight && rb.velocity.x > 0 && CurrentPState != PState.ATTACKING)
+		if (Horizontal > 0 && !facingRight && rb.velocity.x > 0 && !Attacking)
 		{
 			facingRight = true;
 			sr.flipX = false;
 		}
-		else if (Horizontal < 0 && facingRight && rb.velocity.x < 0 && CurrentPState != PState.ATTACKING)
+		else if (Horizontal < 0 && facingRight && rb.velocity.x < 0 && !Attacking)
 		{
 			facingRight = false;
 			sr.flipX = true;
@@ -115,33 +153,19 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		}
 
 		anim.SetBool("Falling", rb.velocity.y < 0);
-		/*
-		//Should probably not have this in Update() ?
-		if (Input.GetButtonDown("Attack"))
-		{
-			anim.SetTrigger("Punch");
-			//TEMPCONTROLLER.SetTrigger("MageSwipe");
-			//Punch();
-		}
-		else if(Input.GetButtonDown("Special"))
-		{
-			anim.SetTrigger("Fly");
-			rb.velocity = new Vector2(0, 15);
-			floating = true;
-		}
-		
-
-		anim.SetBool("InAir", !onGround);
-		if (!onGround)
-			anim.SetBool("Falling", rb.velocity.y < 0);
-		*/
 	}
+
+
+	//******************************************************************************************
+	//									FIXED UPDATE
+	//******************************************************************************************
+
 
 	private void FixedUpdate()
 	{
 
-		//Go through the action queue!
-		if(CurrentPState != PState.ATTACKING && Time.time - QueuedActionTime < MaxQueueTime)
+		//Complete the queued action, if possible.
+		if(!Attacking && Time.time - QueuedActionTime < MaxQueueTime)
 		{
 			//Complete the queued action
 			//If an action is completed, make sure to make the QueuedAction NONE so that the action doesn't happen again.
@@ -164,6 +188,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 			{
 				//Special Attack
 				//Debug.Log("Special Attack");
+				QueuedAction = EnumAction.NONE;
 			}
 		}
 
@@ -187,10 +212,10 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		//Now that we have completed the action queue, do movement!
 		float accelX = 0;
 		float accelY = 0;
-		if(CurrentPState == PState.WALKING)
+		if (CurrentPState == PState.WALKING)
 		{
-
 			float targetXVel = Horizontal * MaxSpeed;
+			if (Attacking) targetXVel = 0;
 			float dv = targetXVel - rb.velocity.x;
 			accelX = dv / Time.fixedDeltaTime;
 
@@ -198,12 +223,13 @@ public class PlayerController : MonoBehaviour, IDamageable {
 				accelX = GroundAccel;
 			else if (accelX < -GroundAccel)
 				accelX = -GroundAccel;
-			
 		}
 		else if(CurrentPState == PState.IN_AIR)
 		{
 			
 			float dv = Horizontal * AirAccel * Time.fixedDeltaTime;
+			if (Attacking) dv = 0;
+
 			if(Horizontal > 0 && dv + rb.velocity.x > MaxSpeed)
 			{
 				dv = Mathf.Max(0, MaxSpeed - rb.velocity.x);
@@ -227,27 +253,15 @@ public class PlayerController : MonoBehaviour, IDamageable {
 				accelY = dvy / Time.fixedDeltaTime;
 			}
 		}
-		else if(CurrentPState == PState.ATTACKING)
-		{
-			if(groundThisFrame)
-			{
-				//accel to a stop
-				float targetXVel = 0;
-				float dv = targetXVel - rb.velocity.x;
-				accelX = dv / Time.fixedDeltaTime;
-
-				if (accelX > GroundAccel)
-					accelX = GroundAccel;
-				else if (accelX < -GroundAccel)
-					accelX = -GroundAccel;
-			}
-		}
 
 		rb.AddForce(new Vector2(accelX * rb.mass, accelY * rb.mass), ForceMode2D.Force);
 
 		//Update ground variables!
 		groundLastFrame = groundThisFrame;
 		groundThisFrame = false;
+
+		//Update input average count
+		NumInputsStored = 0;
 	}
 
 
@@ -261,10 +275,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		if (CurrentPState != PState.IN_AIR)
 		{
 			rb.AddForce(new Vector2(0, CalcJumpForce(JumpHeight, Mathf.Abs(Physics2D.gravity.y))), ForceMode2D.Impulse);
-			//jumpTimeLeft = JumpHoldTime;
-			//onGround = false;
 			floating = true;
-			//ignoreGround = true;
 
 			//This anim trigger is not needed. Jump is triggered in FixedUpdate() when the floor is not detected.
 			//This is same with switching to the IN_AIR PState
@@ -275,16 +286,21 @@ public class PlayerController : MonoBehaviour, IDamageable {
 
 	private void Punch()
 	{
+		//Air physics are weird.
 		if(CurrentPState == PState.IN_AIR)
 		{
-			Vector2 vel = rb.velocity;
-			vel.y = PunchVerticalVel;
-			rb.velocity = vel;
+			Vector2 newVel = rb.velocity;
+			if(newVel.y < PunchVerticalVel) newVel.y = PunchVerticalVel;
+			if (newVel.x > PunchMaxHorzVel) newVel.x = PunchMaxHorzVel;
+			else if (newVel.x < -PunchMaxHorzVel) newVel.x = -PunchMaxHorzVel;
+			rb.velocity = newVel;
 		}
 
-		CurrentPState = PState.ATTACKING;
+		//CurrentPState = PState.ATTACKING;
+		Attacking = true;
 		anim.SetTrigger("Punch");
 
+		//Now, the hitbox!
 		float xoffset = 0.7f * (facingRight ? 1 : -1);
 		Vector2 pos = (Vector2)transform.position + new Vector2( xoffset, -.1f );
 		Hitbox hb = Hitbox.GetNextHitbox();
@@ -310,10 +326,13 @@ public class PlayerController : MonoBehaviour, IDamageable {
 
 	public void EndAttack()
 	{
+		Attacking = false;
+		/*
 		if (groundThisFrame)
 			CurrentPState = PState.WALKING;
 		else
 			CurrentPState = PState.IN_AIR;
+		*/
 	}
 
 
@@ -342,8 +361,28 @@ public class PlayerController : MonoBehaviour, IDamageable {
 	{
 		return groundLastFrame;
 	}
-	
 
+	private static EnumDir GetDirection(float x, float y)
+	{
+		if (x == 0 && y == 1)
+			return EnumDir.N;
+		else if (x == 1 && y == 1)
+			return EnumDir.NE;
+		else if (x == 1 && y == 0)
+			return EnumDir.E;
+		else if (x == 1 && y == -1)
+			return EnumDir.SE;
+		else if (x == 0 && y == -1)
+			return EnumDir.S;
+		else if (x == -1 && y == -1)
+			return EnumDir.SW;
+		else if (x == -1 && y == 0)
+			return EnumDir.W;
+		else if (x == -1 && y == 1)
+			return EnumDir.NW;
+		else
+			return EnumDir.CENTER;
+	}
 
 	//*****************************************************
 	//			IDamageable Implemented Methods
