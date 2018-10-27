@@ -42,7 +42,11 @@ public class Hitbox : MonoBehaviour {
 	public void SetPos( Vector2 pos, Transform parent = null)
 	{
 		transform.SetParent(parent);
-		transform.position = pos;
+
+		if (transform.parent != null)
+			transform.localPosition = pos;
+		else
+			transform.position = pos;
 	}
 
 	public void SetCollider(float width, float height, float angle, int points, bool facingRight)

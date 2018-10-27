@@ -17,6 +17,10 @@ public class PlayerController : MonoBehaviour, IDamageable {
 	public float PunchVerticalVel = 1f;
 	public float PunchMaxHorzVel = 1f;
 
+	[Header("FlyAttackVariables")]
+	public float FlyYVelocity = 20f;
+	public float FlyAttackLength = .75f;
+
 	//************************
 	//   PRIVATE VARIABLES
 	//************************
@@ -32,6 +36,8 @@ public class PlayerController : MonoBehaviour, IDamageable {
 	private bool heldJump = false;
 	private bool floating = false;
 	private bool Attacking = false;
+	private IEnumerator ActionEnumerator = null;
+	private List<Hitbox> ReservedHitboxes;
 
 	//On ground stuff
 	private bool groundThisFrame = true;
@@ -43,6 +49,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 	private EnumAction QueuedAction = EnumAction.NONE;
 	private EnumDir QueuedActionDirection = EnumDir.N;
 	private float QueuedActionTime = 0f;
+	
 	enum EnumAction
 	{
 		NONE,
@@ -63,18 +70,35 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		W,
 		NW
 	}
+	
 	//Player State stuff
 	private PState CurrentPState = PState.WALKING;
-	enum PState
+	
+	public enum PState
 	{
 		WALKING,
 		IN_AIR
+	}
+	
+	//*********************************************************
+	//					GETTERS AND SETTERS
+	//*********************************************************
+	
+	public PState GetState()
+	{
+		return CurrentPState;
+	}
+	
+	public void SetState(PState s)
+	{
+		CurrentPState = s;
 	}
 
 
 	// Use this for initialization
 	void Start ()
 	{
+		ReservedHitboxes = new List<Hitbox>();
 
 		rb = GetComponent<Rigidbody2D>();
 		anim = GetComponent<Animator>();
@@ -181,13 +205,14 @@ public class PlayerController : MonoBehaviour, IDamageable {
 			{
 				//Basic attack
 				//Debug.Log("Basic Attack");
-				Punch();
+				StartAction("Punch");
 				QueuedAction = EnumAction.NONE;
 			}
 			else if(QueuedAction == EnumAction.SPECIAL_ATTACK)
 			{
 				//Special Attack
 				//Debug.Log("Special Attack");
+				StartAction("Fly");//THIS NEEDS TO CHANGE
 				QueuedAction = EnumAction.NONE;
 			}
 		}
@@ -243,7 +268,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 			accelX = dv / Time.fixedDeltaTime;
 
 			//cancel jump if they let go
-			if( rb.velocity.y > 0 && (!heldJump || !floating))
+			if( rb.velocity.y > 0 && (!heldJump || !floating) && !Attacking)
 			{
 				floating = false;
 				float dvy = -JumpCancelAccel * Time.fixedDeltaTime;
@@ -264,11 +289,6 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		NumInputsStored = 0;
 	}
 
-
-	//***************************************************************************
-	//								ACTIONS
-	//***************************************************************************
-
 	private void Jump()
 	{
 		// Jumping
@@ -283,11 +303,39 @@ public class PlayerController : MonoBehaviour, IDamageable {
 			//CurrentPState = PState.IN_AIR;
 		}
 	}
+	
+	//***************************************************************************
+	//								ACTIONS
+	//***************************************************************************
 
-	private void Punch()
+	private void StartAction(string aName)
 	{
+		//End current action
+		if(ActionEnumerator != null)
+		{
+			StopCoroutine(ActionEnumerator);
+			ActionEnumerator = null;
+			FreeHitboxes();
+		}
+
+		if (aName == "Punch")
+			ActionEnumerator = Punch();
+		else if (aName == "Fly")
+			ActionEnumerator = Fly();
+
+		if(ActionEnumerator != null)
+		{
+			StartCoroutine(ActionEnumerator);
+		}
+	}
+	
+	private IEnumerator Punch()
+	{
+		Attacking = true;
+		anim.SetTrigger("Punch");
+
 		//Air physics are weird.
-		if(CurrentPState == PState.IN_AIR)
+		if (CurrentPState == PState.IN_AIR)
 		{
 			Vector2 newVel = rb.velocity;
 			if(newVel.y < PunchVerticalVel) newVel.y = PunchVerticalVel;
@@ -296,13 +344,10 @@ public class PlayerController : MonoBehaviour, IDamageable {
 			rb.velocity = newVel;
 		}
 
-		//CurrentPState = PState.ATTACKING;
-		Attacking = true;
-		anim.SetTrigger("Punch");
 
 		//Now, the hitbox!
 		float xoffset = 0.7f * (facingRight ? 1 : -1);
-		Vector2 pos = (Vector2)transform.position + new Vector2( xoffset, -.1f );
+		Vector2 pos = new Vector2( xoffset, -.1f );
 		Hitbox hb = Hitbox.GetNextHitbox();
 
 		hb.SetPos(pos, transform);
@@ -322,17 +367,72 @@ public class PlayerController : MonoBehaviour, IDamageable {
 
 			enemyHealth.Hurt(1);
 		}
+
+		yield return null;
+	}
+	
+	private IEnumerator Fly()
+	{
+		Attacking = true;
+		anim.SetTrigger("Fly");
+
+		//*******ACTION VARIABLES*******
+
+		
+
+		rb.velocity = new Vector2(0, FlyYVelocity);
+		Hitbox hb = Hitbox.GetNextHitbox();
+		ReservedHitboxes.Add(hb);
+		
+		hb.SetPos( new Vector2(0,.5f), transform);
+		hb.SetCollider(3f, 2.5f, 0, 16, facingRight);
+		//hb.PlayAnimation("Fly");
+		
+		List<Health> hitEnemies = new List<Health>();
+		float hbTime = FlyAttackLength;
+
+		while(hbTime > 0)
+		{
+			Collider2D[] results = hb.GetHits();
+
+			for(int i = 0; i < results.Length; i++)
+			{
+				if(results[i] == null)
+					break;
+				
+
+				Health enemy = results[i].GetComponent<Health>();
+				if(enemy != null && !hitEnemies.Contains(enemy))
+				{
+					enemy.Hurt(2);
+					hitEnemies.Add(enemy);
+					Debug.Log("Fly hit enemy!");
+				}
+			}
+			
+			hbTime -= Time.fixedDeltaTime;
+			yield return new WaitForFixedUpdate();
+		}
+		
+		
+		yield return null;
 	}
 
 	public void EndAttack()
 	{
 		Attacking = false;
-		/*
-		if (groundThisFrame)
-			CurrentPState = PState.WALKING;
-		else
-			CurrentPState = PState.IN_AIR;
-		*/
+		FreeHitboxes();
+		//STOP THE CURRENT ATTACK ENUMERATOR
+	}
+
+	public void FreeHitboxes()
+	{
+		for(int i = 0; i < ReservedHitboxes.Count; i++)
+		{
+			ReservedHitboxes[i].Free();
+		}
+
+		ReservedHitboxes.Clear();
 	}
 
 
@@ -390,12 +490,17 @@ public class PlayerController : MonoBehaviour, IDamageable {
 
 	public void OnHurt()
 	{
-
+		//StartAction("Hurt");
 	}
 
 	public void OnDeath()
 	{
 		//There has to be something better than just destroying the character. Death animation maybe?
 		Destroy(gameObject);
+	}
+
+	void OnDestroy()
+	{
+		FreeHitboxes();
 	}
 }
