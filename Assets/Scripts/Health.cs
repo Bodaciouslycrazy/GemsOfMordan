@@ -11,12 +11,23 @@ public class Health : MonoBehaviour {
 	private int CurHealth = 5;
 	[SerializeField]
 	private bool Invincible = false;
+	[SerializeField]
+	private float InvincibleTime = 2f;
 
-	//private IDamageable entity;
+
+	private float CurITime = 0f;
 
 	void Start()
 	{
 		//entity = GetComponent<IDamageable>();
+	}
+
+	void FixedUpdate()
+	{
+		CurITime -= Time.fixedDeltaTime;
+
+		if (CurITime <= 0 && Invincible)
+			Invincible = false;
 	}
 
 	public void Hurt(int dam)
@@ -26,13 +37,13 @@ public class Health : MonoBehaviour {
 
 		CurHealth -= dam;
 
-		if(CurHealth <= 0)
+		if(CurHealth > 0)
 		{
-			CurHealth = 0;
 			TriggerOnHurt();
 		}
 		else
 		{
+			CurHealth = 0;
 			TriggerOnDeath();
 		}
 	}
@@ -51,8 +62,16 @@ public class Health : MonoBehaviour {
 			entity.OnDeath();
 	}
 
+	/*
 	public void SetInvincible(bool i)
 	{
 		Invincible = i;
+	}
+	*/
+
+	public void SetInvincible()
+	{
+		Invincible = true;
+		CurITime = InvincibleTime;
 	}
 }

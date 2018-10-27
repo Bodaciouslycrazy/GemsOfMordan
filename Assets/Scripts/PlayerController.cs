@@ -13,6 +13,10 @@ public class PlayerController : MonoBehaviour, IDamageable {
 	public float JumpHeight = 8f;
 	public float JumpCancelAccel = 100f;
 
+	[Header("HurtKnockback")]
+	public float HurtHorzKnockback = 5;
+	public float HurtVertKnockback = 5;
+
 	[Header("BasicAttackVariables")]
 	public float PunchVerticalVel = 1f;
 	public float PunchMaxHorzVel = 1f;
@@ -322,6 +326,8 @@ public class PlayerController : MonoBehaviour, IDamageable {
 			ActionEnumerator = Punch();
 		else if (aName == "Fly")
 			ActionEnumerator = Fly();
+		else if (aName == "Knockback")
+			ActionEnumerator = Knockback();
 
 		if(ActionEnumerator != null)
 		{
@@ -418,6 +424,20 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		yield return null;
 	}
 
+	private IEnumerator Knockback()
+	{
+		//Debug.Log("Knockback started");
+		Attacking = true;
+		GetComponent<Health>().SetInvincible();
+
+		float xv = HurtHorzKnockback * (facingRight ? -1 : 1);
+		rb.velocity = new Vector2(xv, HurtVertKnockback);
+
+		anim.SetTrigger("Hurt");
+
+		yield return null;
+	}
+
 	public void EndAttack()
 	{
 		Attacking = false;
@@ -490,7 +510,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 
 	public void OnHurt()
 	{
-		//StartAction("Hurt");
+		StartAction("Knockback");
 	}
 
 	public void OnDeath()
