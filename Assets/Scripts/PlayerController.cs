@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class PlayerController : MonoBehaviour, IDamageable {
+public class PlayerController : GEntity, IDamageable {
+
+	public static PlayerController MainPlayer;
+
 
 	[Header("Movement")]
 	public float MaxSpeed = 5f;
 	public float GroundAccel = 10f;
 	public float AirAccel = 7f;
-	public float GroundAngleTolerance = .01f;
+	//public float GroundAngleTolerance = .01f;
 	public float JumpHeight = 8f;
 	public float JumpCancelAccel = 100f;
 
@@ -28,12 +31,6 @@ public class PlayerController : MonoBehaviour, IDamageable {
 	//************************
 	//   PRIVATE VARIABLES
 	//************************
-	private Rigidbody2D rb;
-	private Animator anim;
-	private SpriteRenderer sr;
-
-	private bool facingRight = true;
-
 	private float Horizontal = 0f;
 	private float Vertical = 0f;
 	private int NumInputsStored = 0;
@@ -44,8 +41,8 @@ public class PlayerController : MonoBehaviour, IDamageable {
 	private List<Hitbox> ReservedHitboxes;
 
 	//On ground stuff
-	private bool groundThisFrame = true;
-	private bool groundLastFrame = true;
+	//private bool groundThisFrame = true;
+	//private bool groundLastFrame = true;
 
 	//Action queue stuff
 	[Header("ActionQueue")]
@@ -75,38 +72,16 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		NW
 	}
 	
-	//Player State stuff
-	private PState CurrentPState = PState.WALKING;
-	
-	public enum PState
-	{
-		WALKING,
-		IN_AIR
-	}
-	
 	//*********************************************************
 	//					GETTERS AND SETTERS
 	//*********************************************************
-	
-	public PState GetState()
-	{
-		return CurrentPState;
-	}
-	
-	public void SetState(PState s)
-	{
-		CurrentPState = s;
-	}
-
 
 	// Use this for initialization
-	void Start ()
+	public override void Start ()
 	{
+		base.Start();
+		MainPlayer = this;
 		ReservedHitboxes = new List<Hitbox>();
-
-		rb = GetComponent<Rigidbody2D>();
-		anim = GetComponent<Animator>();
-		sr = GetComponent<SpriteRenderer>();
 	}
 	
 	// Update is called once per frame
@@ -150,15 +125,13 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		
 
 		
-		if (Horizontal > 0 && !facingRight && rb.velocity.x > 0 && !Attacking)
+		if (Horizontal > 0 && !GetFacingRight() && rb.velocity.x > 0 && !Attacking)
 		{
-			facingRight = true;
-			sr.flipX = false;
+			SetFacingRight(true);
 		}
-		else if (Horizontal < 0 && facingRight && rb.velocity.x < 0 && !Attacking)
+		else if (Horizontal < 0 && GetFacingRight() && rb.velocity.x < 0 && !Attacking)
 		{
-			facingRight = false;
-			sr.flipX = true;
+			SetFacingRight(false);
 		}
 
 		if(Horizontal == 0f && rb.velocity.x == 0f) //player standing still
@@ -189,7 +162,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 	//******************************************************************************************
 
 
-	private void FixedUpdate()
+	void FixedUpdate()
 	{
 
 		//Complete the queued action, if possible.
@@ -198,7 +171,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 			//Complete the queued action
 			//If an action is completed, make sure to make the QueuedAction NONE so that the action doesn't happen again.
 			
-			if(QueuedAction == EnumAction.JUMP && CurrentPState != PState.IN_AIR)
+			if(QueuedAction == EnumAction.JUMP && GetGroundState() != GroundState.IN_AIR)
 			{
 				//JUMP
 				//Debug.Log("Jumping");
@@ -222,26 +195,13 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		}
 
 		//Do state transitions!
-		if (groundThisFrame && CurrentPState == PState.IN_AIR)
-		{
-			CurrentPState = PState.WALKING;
-			//anim.SetTrigger("Land");
-			anim.SetBool("OnGround", true);
-			//Debug.Log("SET LAND");
-		}
-		else if (!groundThisFrame && CurrentPState == PState.WALKING)
-		{
-			CurrentPState = PState.IN_AIR;
-			//anim.SetTrigger("Jump");
-			anim.SetBool("OnGround", false);
-			//Debug.Log("SET JUMP");
-		}
+		UpdateGroundState();
 
 
 		//Now that we have completed the action queue, do movement!
 		float accelX = 0;
 		float accelY = 0;
-		if (CurrentPState == PState.WALKING)
+		if (GetGroundState() == GroundState.WALKING)
 		{
 			float targetXVel = Horizontal * MaxSpeed;
 			if (Attacking) targetXVel = 0;
@@ -253,7 +213,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 			else if (accelX < -GroundAccel)
 				accelX = -GroundAccel;
 		}
-		else if(CurrentPState == PState.IN_AIR)
+		else if(GetGroundState() == GroundState.IN_AIR)
 		{
 			
 			float dv = Horizontal * AirAccel * Time.fixedDeltaTime;
@@ -286,8 +246,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		rb.AddForce(new Vector2(accelX * rb.mass, accelY * rb.mass), ForceMode2D.Force);
 
 		//Update ground variables!
-		groundLastFrame = groundThisFrame;
-		groundThisFrame = false;
+		GroundFrameEnd();
 
 		//Update input average count
 		NumInputsStored = 0;
@@ -296,9 +255,9 @@ public class PlayerController : MonoBehaviour, IDamageable {
 	private void Jump()
 	{
 		// Jumping
-		if (CurrentPState != PState.IN_AIR)
+		if (GetGroundState() != GroundState.IN_AIR)
 		{
-			rb.AddForce(new Vector2(0, CalcJumpForce(JumpHeight, Mathf.Abs(Physics2D.gravity.y))), ForceMode2D.Impulse);
+			rb.AddForce(new Vector2(0, CalcJumpForce(JumpHeight)), ForceMode2D.Impulse);
 			floating = true;
 
 			//This anim trigger is not needed. Jump is triggered in FixedUpdate() when the floor is not detected.
@@ -341,7 +300,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		anim.SetTrigger("Punch");
 
 		//Air physics are weird.
-		if (CurrentPState == PState.IN_AIR)
+		if (GetGroundState() == GroundState.IN_AIR)
 		{
 			Vector2 newVel = rb.velocity;
 			if(newVel.y < PunchVerticalVel) newVel.y = PunchVerticalVel;
@@ -352,12 +311,12 @@ public class PlayerController : MonoBehaviour, IDamageable {
 
 
 		//Now, the hitbox!
-		float xoffset = 0.7f * (facingRight ? 1 : -1);
+		float xoffset = 0.7f * (GetFacingRight() ? 1 : -1);
 		Vector2 pos = new Vector2( xoffset, -.1f );
 		Hitbox hb = Hitbox.GetNextHitbox();
 
 		hb.SetPos(pos, transform);
-		hb.SetCollider(.8f, .5f, 0, 16, facingRight);
+		hb.SetCollider(.8f, .5f, 0, 16, GetFacingRight());
 		hb.PlayAnimation("MageSwipe");
 
 		Collider2D[] results = hb.GetHits();
@@ -391,7 +350,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		ReservedHitboxes.Add(hb);
 		
 		hb.SetPos( new Vector2(0,.5f), transform);
-		hb.SetCollider(3f, 2.5f, 0, 16, facingRight);
+		hb.SetCollider(3f, 2.5f, 0, 16, GetFacingRight());
 		//hb.PlayAnimation("Fly");
 		
 		List<Health> hitEnemies = new List<Health>();
@@ -430,7 +389,7 @@ public class PlayerController : MonoBehaviour, IDamageable {
 		Attacking = true;
 		GetComponent<Health>().SetInvincible();
 
-		float xv = HurtHorzKnockback * (facingRight ? -1 : 1);
+		float xv = HurtHorzKnockback * (GetFacingRight() ? -1 : 1);
 		rb.velocity = new Vector2(xv, HurtVertKnockback);
 
 		anim.SetTrigger("Hurt");
@@ -457,30 +416,9 @@ public class PlayerController : MonoBehaviour, IDamageable {
 
 
 	//**************************************************************
-	//                 COLLISION AND OTHER PHYSICS
+	//							OTHER PHYSICS
 	//**************************************************************
-
-
-	void OnCollisionStay2D(Collision2D other)
-	{
-		foreach( ContactPoint2D contact in other.contacts)
-		{
-			if (Vector2.Dot(contact.normal, Vector2.up) > GroundAngleTolerance)
-				groundThisFrame = true;
-		}
-	}
-
 	
-	private float CalcJumpForce( float height, float grav)
-	{
-		return Mathf.Sqrt(2 * grav * height) * rb.mass;
-	}
-	
-	
-	public bool WasOnGround()
-	{
-		return groundLastFrame;
-	}
 
 	private static EnumDir GetDirection(float x, float y)
 	{

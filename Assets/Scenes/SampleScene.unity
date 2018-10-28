@@ -270,10 +270,9 @@ MonoBehaviour:
   MaxSpeed: 4.5
   GroundAccel: 26
   AirAccel: 14
-  GroundAngleTolerance: 0.01
   JumpHeight: 4.5
   JumpCancelAccel: 80
-  HurtHorzKnockback: 5
+  HurtHorzKnockback: 1
   HurtVertKnockback: 5
   PunchVerticalVel: 2.5
   PunchMaxHorzVel: 0.75
@@ -4246,7 +4245,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 877950147}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.547, y: 2.388, z: 0}
+  m_LocalPosition: {x: -8.66, y: 1.05, z: 0}
   m_LocalScale: {x: 1.5, y: 1.5, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -4263,6 +4262,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 937efafb5e8532846b56701b31043cd4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  AggroDist: 5
+  JumpPrepareTime: 0.6
+  JumpCooldownTime: 1.3
+  StunLength: 0.5
+  JumpHeight: 2.2
+  JumpHorzForce: 2
+  CurAIState: 0
 --- !u!95 &877950154
 Animator:
   serializedVersion: 3
