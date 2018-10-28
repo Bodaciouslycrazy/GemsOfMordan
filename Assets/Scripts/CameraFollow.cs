@@ -13,11 +13,17 @@ public class CameraFollow : MonoBehaviour {
 	public Transform Following;
 	public FollowMode Mode = FollowMode.FOLLOW_PLAYER;
 
-	public float LerpMult = 1f;
-	public float DistPerVel = .5f;
-	public float MaxCameraXDist = 2f;
-	public float MaxHeightAbovePlatform = 5f;
+	public float SmoothTime = .3f;
+	public float MaxSpeedMult = 2.5f;
+	public float LookaheadPerVel = .35f;
+	public float LookaheadMaxDist = 2.5f;
 
+	//public float LerpMult = 1f;
+	//public float DistPerVel = .5f;
+	//public float MaxCameraXDist = 2f;
+	//public float MaxHeightAbovePlatform = 5f;
+
+	/*
 	public enum State
 	{
 		MOVING_RIGHT,
@@ -25,20 +31,60 @@ public class CameraFollow : MonoBehaviour {
 		TRANSITION_RIGHT,
 		TRANSITION_LEFT
 	}
+	*/
 
-	public State curState = State.MOVING_RIGHT;
+	//public State curState = State.MOVING_RIGHT;
 
-	private Vector3 oldPos;
-	private Vector3 targetPos;
-	private float timeAcc = 0f;
-	private float platform = 0f;
+	//private Vector3 oldPos;
+	//private Vector3 targetPos;
+	private Vector2 CurVelocity;
+	//private float timeAcc = 0f;
+	//private float platform = 0f;
 
 	// Use this for initialization
 	void Start () {
-		oldPos = transform.position;
-		targetPos = transform.position;
+		//oldPos = transform.position;
+		//targetPos = transform.position;
+		CurVelocity = new Vector2();
 	}
-	
+
+	private void Update()
+	{
+		if (Mode == FollowMode.STATIC)
+		{
+			//Do nothing
+		}
+		else if(Mode == FollowMode.FOLLOW_PLAYER)
+		{
+			if (Following == null)
+				return;
+
+			Vector3 pos = Vector2.SmoothDamp(
+				transform.position, 
+				GetTargetPos(), 
+				ref CurVelocity, 
+				SmoothTime, 
+				Following.GetComponent<Rigidbody2D>().velocity.magnitude * MaxSpeedMult);
+			pos.z = -10;
+
+			transform.position = pos;
+		}
+	}
+
+	private Vector2 GetTargetPos()
+	{
+		Vector2 targ = Following.position;
+		Vector2 offset = Following.GetComponent<Rigidbody2D>().velocity * LookaheadPerVel;
+
+		if(offset.magnitude > LookaheadMaxDist)
+		{
+			offset = offset.normalized * LookaheadMaxDist;
+		}
+
+		return targ + offset;
+	}
+
+	/*
 	void Update()
 	{
 		timeAcc += Time.deltaTime;
@@ -75,4 +121,5 @@ public class CameraFollow : MonoBehaviour {
 			//transform.position = Vector3.Lerp( transform.position, target, Time.deltaTime * LerpMult);
 		}
 	}
+	*/
 }

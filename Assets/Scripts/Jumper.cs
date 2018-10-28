@@ -110,7 +110,7 @@ public class Jumper : GEntity, IDamageable {
 	public void OnHurt()
 	{
 		SetAIState(AIState.STUNNED);
-		rb.velocity = new Vector2(0, 2f);
+		rb.velocity = new Vector2(0, 4f);
 		anim.SetTrigger("Hurt");
 	}
 

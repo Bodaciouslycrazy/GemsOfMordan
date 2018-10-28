@@ -27,6 +27,7 @@ public class PlayerController : GEntity, IDamageable {
 	[Header("FlyAttackVariables")]
 	public float FlyYVelocity = 20f;
 	public float FlyAttackLength = .75f;
+	private bool FlyAttackCharged = true;
 
 	//************************
 	//   PRIVATE VARIABLES
@@ -39,10 +40,6 @@ public class PlayerController : GEntity, IDamageable {
 	private bool Attacking = false;
 	private IEnumerator ActionEnumerator = null;
 	private List<Hitbox> ReservedHitboxes;
-
-	//On ground stuff
-	//private bool groundThisFrame = true;
-	//private bool groundLastFrame = true;
 
 	//Action queue stuff
 	[Header("ActionQueue")]
@@ -189,8 +186,11 @@ public class PlayerController : GEntity, IDamageable {
 			{
 				//Special Attack
 				//Debug.Log("Special Attack");
-				StartAction("Fly");//THIS NEEDS TO CHANGE
-				QueuedAction = EnumAction.NONE;
+				if(FlyAttackCharged)
+				{
+					StartAction("Fly");//THIS NEEDS TO CHANGE
+					QueuedAction = EnumAction.NONE;
+				}
 			}
 		}
 
@@ -339,6 +339,7 @@ public class PlayerController : GEntity, IDamageable {
 	private IEnumerator Fly()
 	{
 		Attacking = true;
+		FlyAttackCharged = false;
 		anim.SetTrigger("Fly");
 
 		//*******ACTION VARIABLES*******
@@ -455,6 +456,17 @@ public class PlayerController : GEntity, IDamageable {
 	{
 		//There has to be something better than just destroying the character. Death animation maybe?
 		Destroy(gameObject);
+	}
+
+	//Other Variables
+
+	protected override void SetGroundState(GroundState s)
+	{
+		base.SetGroundState(s);
+		if(s == GroundState.WALKING)
+		{
+			FlyAttackCharged = true;
+		}
 	}
 
 	void OnDestroy()
