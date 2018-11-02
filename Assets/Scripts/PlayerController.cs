@@ -8,6 +8,13 @@ public class PlayerController : GEntity, IDamageable {
 	public static PlayerController MainPlayer;
 
 
+	public Gem CurGem = Gem.NONE;
+	public enum Gem
+	{
+		NONE,
+		AIR
+	}
+
 	[Header("Movement")]
 	public float MaxSpeed = 5f;
 	public float GroundAccel = 10f;
@@ -38,7 +45,8 @@ public class PlayerController : GEntity, IDamageable {
 	private bool heldJump = false;
 	private bool floating = false;
 	private bool Attacking = false;
-	private IEnumerator ActionEnumerator = null;
+	private IEnumerator ActionRoutine = null;
+	private bool RoutineRequiresEndTrigger = false;
 	private List<Hitbox> ReservedHitboxes;
 
 	//Action queue stuff
@@ -135,19 +143,16 @@ public class PlayerController : GEntity, IDamageable {
 		{
 			//set state to idle
 			anim.SetInteger("Accel", 0);
-			//Debug.Log("Accel = 0");
 		}
 		else if( rb.velocity.x * Horizontal > 0) //player is accelerating,
 		{
 			//set state to running
 			anim.SetInteger("Accel", 1);
-			//Debug.Log("Accel = 1");
 		}
-		else
+		else //Player is deccelerating
 		{
 			//set state to sliding
 			anim.SetInteger("Accel", -1);
-			//Debug.Log("Accel = -1");
 		}
 
 		anim.SetBool("Falling", rb.velocity.y < 0);
@@ -179,18 +184,23 @@ public class PlayerController : GEntity, IDamageable {
 			{
 				//Basic attack
 				//Debug.Log("Basic Attack");
+				if (QueuedActionDirection == EnumDir.E || QueuedActionDirection == EnumDir.NE || QueuedActionDirection == EnumDir.SE)
+					SetFacingRight(true);
+				else if (QueuedActionDirection == EnumDir.W || QueuedActionDirection == EnumDir.NW || QueuedActionDirection == EnumDir.SW)
+					SetFacingRight(false);
+
 				StartAction("Punch");
 				QueuedAction = EnumAction.NONE;
 			}
 			else if(QueuedAction == EnumAction.SPECIAL_ATTACK)
 			{
+				if (QueuedActionDirection == EnumDir.E || QueuedActionDirection == EnumDir.NE || QueuedActionDirection == EnumDir.SE)
+					SetFacingRight(true);
+				else if (QueuedActionDirection == EnumDir.W || QueuedActionDirection == EnumDir.NW || QueuedActionDirection == EnumDir.SW)
+					SetFacingRight(false);
+
 				//Special Attack
-				//Debug.Log("Special Attack");
-				if(FlyAttackCharged)
-				{
-					StartAction("Fly");//THIS NEEDS TO CHANGE
-					QueuedAction = EnumAction.NONE;
-				}
+				ChooseSpecial();
 			}
 		}
 
@@ -252,6 +262,20 @@ public class PlayerController : GEntity, IDamageable {
 		NumInputsStored = 0;
 	}
 
+	private void ChooseSpecial()
+	{
+		if (CurGem == Gem.NONE)
+			return;
+		else if( CurGem == Gem.AIR)
+		{
+			if (FlyAttackCharged)
+			{
+				StartAction("Fly");//THIS NEEDS TO CHANGE
+				QueuedAction = EnumAction.NONE;
+			}
+		}
+	}
+
 	private void Jump()
 	{
 		// Jumping
@@ -261,9 +285,7 @@ public class PlayerController : GEntity, IDamageable {
 			floating = true;
 
 			//This anim trigger is not needed. Jump is triggered in FixedUpdate() when the floor is not detected.
-			//This is same with switching to the IN_AIR PState
 			//anim.SetTrigger("Jump");
-			//CurrentPState = PState.IN_AIR;
 		}
 	}
 	
@@ -274,23 +296,23 @@ public class PlayerController : GEntity, IDamageable {
 	private void StartAction(string aName)
 	{
 		//End current action
-		if(ActionEnumerator != null)
+		if(ActionRoutine != null)
 		{
-			StopCoroutine(ActionEnumerator);
-			ActionEnumerator = null;
-			FreeHitboxes();
+			StopCoroutine(ActionRoutine);
+			ActionRoutine = null;
+			EndAction();
 		}
 
 		if (aName == "Punch")
-			ActionEnumerator = Punch();
+			ActionRoutine = Punch();
 		else if (aName == "Fly")
-			ActionEnumerator = Fly();
+			ActionRoutine = Fly();
 		else if (aName == "Knockback")
-			ActionEnumerator = Knockback();
+			ActionRoutine = Knockback();
 
-		if(ActionEnumerator != null)
+		if(ActionRoutine != null)
 		{
-			StartCoroutine(ActionEnumerator);
+			StartCoroutine(ActionRoutine);
 		}
 	}
 	
@@ -340,25 +362,28 @@ public class PlayerController : GEntity, IDamageable {
 	{
 		Attacking = true;
 		FlyAttackCharged = false;
+		RoutineRequiresEndTrigger = true;
 		anim.SetTrigger("Fly");
 
-		//*******ACTION VARIABLES*******
 
-		
-
+		//Set velocity upwards
 		rb.velocity = new Vector2(0, FlyYVelocity);
+
+		//Hitbox initialization...
 		Hitbox hb = Hitbox.GetNextHitbox();
 		ReservedHitboxes.Add(hb);
-		
 		hb.SetPos( new Vector2(0,.5f), transform);
 		hb.SetCollider(3f, 2.5f, 0, 16, GetFacingRight());
-		//hb.PlayAnimation("Fly");
 		
 		List<Health> hitEnemies = new List<Health>();
 		float hbTime = FlyAttackLength;
 
+		//Every frame:
 		while(hbTime > 0)
 		{
+			//Add force to combat gravity.
+			rb.AddForce(Physics2D.gravity * -1  * rb.mass);
+
 			Collider2D[] results = hb.GetHits();
 
 			for(int i = 0; i < results.Length; i++)
@@ -372,15 +397,19 @@ public class PlayerController : GEntity, IDamageable {
 				{
 					enemy.Hurt(2);
 					hitEnemies.Add(enemy);
-					Debug.Log("Fly hit enemy!");
+					//Debug.Log("Fly hit enemy!");
 				}
 			}
 			
 			hbTime -= Time.fixedDeltaTime;
 			yield return new WaitForFixedUpdate();
 		}
-		
-		
+
+		//Allow the player to float out of the attack?
+		//floating = true;
+		rb.velocity = Vector2.zero;
+		anim.SetTrigger("EndAttack");
+		RoutineRequiresEndTrigger = false;
 		yield return null;
 	}
 
@@ -395,15 +424,26 @@ public class PlayerController : GEntity, IDamageable {
 
 		anim.SetTrigger("Hurt");
 
+		yield return new WaitForSeconds(.5f);
+
+		GetComponent<Health>().SetBlinking(true);
+
 		yield return null;
 	}
 
-	public void EndAttack()
+	public void EndAction()
 	{
 		Attacking = false;
+		if (RoutineRequiresEndTrigger)
+		{
+			anim.SetTrigger("EndAttack");
+			RoutineRequiresEndTrigger = false;
+		}
 		FreeHitboxes();
 		//STOP THE CURRENT ATTACK ENUMERATOR
 	}
+
+
 
 	public void FreeHitboxes()
 	{

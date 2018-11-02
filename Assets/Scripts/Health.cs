@@ -14,12 +14,34 @@ public class Health : MonoBehaviour {
 	[SerializeField]
 	private float InvincibleTime = 2f;
 
+	const float BLINK_LENGTH = .08f;
+
+	private float CurBlinkTime = 0f;
+	private bool Blinking = false;
 
 	private float CurITime = 0f;
 
+	private SpriteRenderer sr;
+
 	void Start()
 	{
-		//entity = GetComponent<IDamageable>();
+		sr = GetComponent<SpriteRenderer>();
+	}
+
+	void Update()
+	{
+		if(Blinking)
+		{
+			CurBlinkTime -= Time.deltaTime;
+			if(CurBlinkTime <= 0)
+			{
+				Color c = sr.color;
+				c.a = c.a == 1f? 0 : 1;
+				sr.color = c;
+
+				CurBlinkTime += BLINK_LENGTH;
+			}
+		}
 	}
 
 	void FixedUpdate()
@@ -27,7 +49,10 @@ public class Health : MonoBehaviour {
 		CurITime -= Time.fixedDeltaTime;
 
 		if (CurITime <= 0 && Invincible)
+		{
 			Invincible = false;
+			SetBlinking(false);
+		}
 	}
 
 	public void Hurt(int dam)
@@ -73,5 +98,21 @@ public class Health : MonoBehaviour {
 	{
 		Invincible = true;
 		CurITime = InvincibleTime;
+	}
+
+	public void SetBlinking(bool b)
+	{
+		Blinking = b;
+
+		if (b)
+		{
+			CurBlinkTime = BLINK_LENGTH;
+		}
+		else
+		{
+			Color c = sr.color;
+			c.a = 1;
+			sr.color = c;
+		}
 	}
 }

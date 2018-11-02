@@ -81,7 +81,8 @@ public class Jumper : GEntity, IDamageable {
 
 		GroundFrameEnd();
 		//If the player is colliding, hurt him.
-		CollideWithFriendlies();
+		if(CurAIState != AIState.STUNNED)
+			CollideWithFriendlies();
 	}
 
 	private void CollideWithFriendlies()
