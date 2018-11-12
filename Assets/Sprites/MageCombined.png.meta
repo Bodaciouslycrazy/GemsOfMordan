@@ -33,6 +33,7 @@ TextureImporter:
     21300056: MageCombined_28
     21300058: MageCombined_29
     21300060: MageCombined_30
+    21300062: MageCombined_31
   externalObjects: {}
   serializedVersion: 7
   mipmaps:
@@ -723,13 +724,33 @@ TextureImporter:
         width: 48
         height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
       spriteID: c951946382a956a4aac720ceb6fa8a35
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MageCombined_31
+      rect:
+        serializedVersion: 2
+        x: 336
+        y: 192
+        width: 48
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bd582a1a67268a2489e3a86d045cd8ba
       vertices: []
       indices: 
       edges: []

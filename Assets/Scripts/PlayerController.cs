@@ -33,8 +33,17 @@ public class PlayerController : GEntity, IDamageable {
 
 	[Header("FlyAttackVariables")]
 	public float FlyYVelocity = 20f;
-	public float FlyAttackLength = .75f;
+	public float FlyAttackLength = .85f;
 	private bool FlyAttackCharged = true;
+
+	[Header("DiveKiackAttackVariables")]
+	public float DivekickSpeed = 20f;
+	public float DivekickLength = .70f;
+	private bool DivekickCharged = true;
+
+
+	[Header("Other Variables")]
+	public List<Hitbox> ReservedHitboxes;
 
 	//************************
 	//   PRIVATE VARIABLES
@@ -44,10 +53,10 @@ public class PlayerController : GEntity, IDamageable {
 	private int NumInputsStored = 0;
 	private bool heldJump = false;
 	private bool floating = false;
+	private bool forceFloating = false;
 	private bool Attacking = false;
 	private IEnumerator ActionRoutine = null;
 	private bool RoutineRequiresEndTrigger = false;
-	private List<Hitbox> ReservedHitboxes;
 
 	//Action queue stuff
 	[Header("ActionQueue")]
@@ -66,15 +75,15 @@ public class PlayerController : GEntity, IDamageable {
 
 	enum EnumDir
 	{
-		CENTER,
-		N,
-		NE,
-		E,
-		SE,
-		S,
-		SW,
-		W,
-		NW
+		N = 0,
+		NE = 1,
+		E = 2,
+		SE = 3,
+		S = 4,
+		SW = 5,
+		W = 6,
+		NW = 7,
+		CENTER
 	}
 	
 	//*********************************************************
@@ -86,7 +95,7 @@ public class PlayerController : GEntity, IDamageable {
 	{
 		base.Start();
 		MainPlayer = this;
-		ReservedHitboxes = new List<Hitbox>();
+		//ReservedHitboxes = new List<Hitbox>();
 	}
 	
 	// Update is called once per frame
@@ -242,7 +251,7 @@ public class PlayerController : GEntity, IDamageable {
 			accelX = dv / Time.fixedDeltaTime;
 
 			//cancel jump if they let go
-			if( rb.velocity.y > 0 && (!heldJump || !floating) && !Attacking)
+			if( rb.velocity.y > 0 && (!heldJump || !floating) && !Attacking && !forceFloating)
 			{
 				floating = false;
 				float dvy = -JumpCancelAccel * Time.fixedDeltaTime;
@@ -266,11 +275,16 @@ public class PlayerController : GEntity, IDamageable {
 	{
 		if (CurGem == Gem.NONE)
 			return;
-		else if( CurGem == Gem.AIR)
+		else if(CurGem == Gem.AIR)
 		{
-			if (FlyAttackCharged)
+			if(IsDirectionAdjacent(QueuedActionDirection, EnumDir.S) && DivekickCharged)
 			{
-				StartAction("Fly");//THIS NEEDS TO CHANGE
+				StartAction("DiveKick");
+				QueuedAction = EnumAction.NONE;
+			}
+			else if (!IsDirectionAdjacent(QueuedActionDirection, EnumDir.S)  && FlyAttackCharged)
+			{
+				StartAction("Fly");
 				QueuedAction = EnumAction.NONE;
 			}
 		}
@@ -307,15 +321,21 @@ public class PlayerController : GEntity, IDamageable {
 			ActionRoutine = Punch();
 		else if (aName == "Fly")
 			ActionRoutine = Fly();
+		else if (aName == "DiveKick")
+			ActionRoutine = DiveKick();
 		else if (aName == "Knockback")
 			ActionRoutine = Knockback();
+
+		anim.ResetTrigger("EndAttack");
 
 		if(ActionRoutine != null)
 		{
 			StartCoroutine(ActionRoutine);
 		}
 	}
-	
+
+	#region Attack Coroutines
+
 	private IEnumerator Punch()
 	{
 		Attacking = true;
@@ -335,7 +355,7 @@ public class PlayerController : GEntity, IDamageable {
 		//Now, the hitbox!
 		float xoffset = 0.7f * (GetFacingRight() ? 1 : -1);
 		Vector2 pos = new Vector2( xoffset, -.1f );
-		Hitbox hb = Hitbox.GetNextHitbox();
+		Hitbox hb = ReservedHitboxes[0];
 
 		hb.SetPos(pos, transform);
 		hb.SetCollider(.8f, .5f, 0, 16, GetFacingRight());
@@ -357,7 +377,8 @@ public class PlayerController : GEntity, IDamageable {
 
 		yield return null;
 	}
-	
+
+
 	private IEnumerator Fly()
 	{
 		Attacking = true;
@@ -370,37 +391,37 @@ public class PlayerController : GEntity, IDamageable {
 		rb.velocity = new Vector2(0, FlyYVelocity);
 
 		//Hitbox initialization...
-		Hitbox hb = Hitbox.GetNextHitbox();
-		ReservedHitboxes.Add(hb);
-		hb.SetPos( new Vector2(0,.5f), transform);
-		hb.SetCollider(3f, 2.5f, 0, 16, GetFacingRight());
-		
+		Hitbox hb = ReservedHitboxes[0];
+		hb.SetPos(new Vector2(0, .5f), transform);
+		hb.SetCollider(2f, 1.5f, 0, 16, GetFacingRight());
+		hb.PlayAnimation("FlyAttack");
+
 		List<Health> hitEnemies = new List<Health>();
 		float hbTime = FlyAttackLength;
 
 		//Every frame:
-		while(hbTime > 0)
+		while (hbTime > 0)
 		{
 			//Add force to combat gravity.
-			rb.AddForce(Physics2D.gravity * -1  * rb.mass);
+			rb.AddForce(Physics2D.gravity * -1 * rb.mass);
 
 			Collider2D[] results = hb.GetHits();
 
-			for(int i = 0; i < results.Length; i++)
+			for (int i = 0; i < results.Length; i++)
 			{
-				if(results[i] == null)
+				if (results[i] == null)
 					break;
-				
+
 
 				Health enemy = results[i].GetComponent<Health>();
-				if(enemy != null && !hitEnemies.Contains(enemy))
+				if (enemy != null && !hitEnemies.Contains(enemy))
 				{
 					enemy.Hurt(2);
 					hitEnemies.Add(enemy);
 					//Debug.Log("Fly hit enemy!");
 				}
 			}
-			
+
 			hbTime -= Time.fixedDeltaTime;
 			yield return new WaitForFixedUpdate();
 		}
@@ -408,6 +429,85 @@ public class PlayerController : GEntity, IDamageable {
 		//Allow the player to float out of the attack?
 		//floating = true;
 		rb.velocity = Vector2.zero;
+		hb.StopAnimation();
+		anim.SetTrigger("EndAttack");
+		RoutineRequiresEndTrigger = false;
+		yield return null;
+	}
+
+	private IEnumerator DiveKick()
+	{
+		if (GetGroundState() == GroundState.WALKING)
+			yield return null;
+		Debug.Log("DIVEKICK STARTED");
+
+		Attacking = true;
+		DivekickCharged = false;
+		RoutineRequiresEndTrigger = true;
+		anim.SetTrigger("DiveKick");
+
+		int xmod = GetFacingRight() ? 1 : -1;
+
+		//Set velocity downwards
+		rb.velocity = new Vector2( xmod, -1).normalized * DivekickSpeed;
+
+		//Hitbox initialization...
+		Hitbox hb = ReservedHitboxes[0];
+		hb.SetPos(new Vector2(xmod * 0.25f, -.5f), transform);
+		hb.SetCollider(2f, 1f, -45, 16, GetFacingRight());
+		hb.PlayAnimation("DiveAttack");
+
+		//List<Health> hitEnemies = new List<Health>();
+		bool hitEnemy = false;
+		float hbTime = DivekickLength;
+		
+
+		//Every frame:
+		while (hbTime > 0)
+		{
+			//Add force to combat gravity.
+			rb.AddForce(Physics2D.gravity * -1 * rb.mass);
+
+			Collider2D[] results = hb.GetHits();
+
+			for (int i = 0; i < results.Length; i++)
+			{
+				if (results[i] == null)
+					break;
+
+
+				Health enemy = results[i].GetComponent<Health>();
+				if (enemy != null ) // && !hitEnemies.Contains(enemy))
+				{
+					enemy.Hurt(2);
+					hitEnemy = true;
+					break;
+					//hitEnemies.Add(enemy);
+					//Debug.Log("Fly hit enemy!");
+				}
+			}
+
+			if (hitEnemy)
+				break;
+
+			hbTime -= Time.fixedDeltaTime;
+			yield return new WaitForFixedUpdate();
+
+			if (GetGroundState() == GroundState.WALKING)
+				break;
+		}
+
+		if(hitEnemy)
+		{
+			forceFloating = true;
+			rb.velocity = new Vector2(-xmod * 2, 8);
+		}
+		else
+		{
+			rb.velocity = Vector2.zero;
+		}
+
+		hb.StopAnimation();
 		anim.SetTrigger("EndAttack");
 		RoutineRequiresEndTrigger = false;
 		yield return null;
@@ -431,6 +531,8 @@ public class PlayerController : GEntity, IDamageable {
 		yield return null;
 	}
 
+		#endregion
+
 	public void EndAction()
 	{
 		Attacking = false;
@@ -439,21 +541,24 @@ public class PlayerController : GEntity, IDamageable {
 			anim.SetTrigger("EndAttack");
 			RoutineRequiresEndTrigger = false;
 		}
-		FreeHitboxes();
+		//FreeHitboxes();
 		//STOP THE CURRENT ATTACK ENUMERATOR
 	}
 
 
-
+	/*
 	public void FreeHitboxes()
 	{
+		
 		for(int i = 0; i < ReservedHitboxes.Count; i++)
 		{
 			ReservedHitboxes[i].Free();
 		}
 
 		ReservedHitboxes.Clear();
+
 	}
+	*/
 
 
 	//**************************************************************
@@ -483,6 +588,20 @@ public class PlayerController : GEntity, IDamageable {
 			return EnumDir.CENTER;
 	}
 
+	private bool IsDirectionAdjacent( EnumDir a, EnumDir b )
+	{
+		if (a == EnumDir.CENTER || b == EnumDir.CENTER)
+			return false;
+
+		int diff = Mathf.Abs((int)(a) - (int)(b));
+		if (diff == 0 || diff == 1 || diff == 7)
+			return true;
+		else
+			return false;
+	}
+
+
+
 	//*****************************************************
 	//			IDamageable Implemented Methods
 	//*****************************************************
@@ -505,12 +624,14 @@ public class PlayerController : GEntity, IDamageable {
 		base.SetGroundState(s);
 		if(s == GroundState.WALKING)
 		{
+			forceFloating = false;
 			FlyAttackCharged = true;
+			DivekickCharged = true;
 		}
 	}
 
 	void OnDestroy()
 	{
-		FreeHitboxes();
+		//FreeHitboxes();
 	}
 }

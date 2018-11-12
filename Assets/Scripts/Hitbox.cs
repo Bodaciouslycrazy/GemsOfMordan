@@ -8,7 +8,6 @@ public class Hitbox : MonoBehaviour {
 	static Hitbox[] HitboxPool = new Hitbox[32];
 	static int initializedBoxes = 0;
 	static int nextBox = 0;
-	static Collider2D[] results = new Collider2D[16];
 	static int resultSize = 0;
 
 	private PolygonCollider2D coll;
@@ -18,6 +17,7 @@ public class Hitbox : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		/*
 		if(initializedBoxes >= HitboxPool.Length)
 		{
 			Destroy(gameObject);
@@ -28,19 +28,33 @@ public class Hitbox : MonoBehaviour {
 			initializedBoxes++;
 			//Debug.Log("Initialized a box!");
 		}
+		*/
 
 		rend = GetComponent<SpriteRenderer>();
 		anim = GetComponent<Animator>();
 		coll = GetComponent<PolygonCollider2D>();
 	}
 
+
 	public void PlayAnimation(string animName)
 	{
 		anim.SetTrigger(animName);
 	}
 
+	public void StopAnimation()
+	{
+		anim.SetTrigger("Stop");
+	}
+
 	public void SetPos( Vector2 pos, Transform parent = null)
 	{
+		SetPos(pos, new Vector2(1, 1), parent);
+	}
+
+	public void SetPos( Vector2 pos, Vector2 scale, Transform parent = null)
+	{
+		transform.parent = null;
+		transform.localScale = new Vector3(scale.x, scale.y, 1);
 		transform.SetParent(parent);
 
 		if (transform.parent != null)
@@ -51,6 +65,7 @@ public class Hitbox : MonoBehaviour {
 
 	public void SetCollider(float width, float height, float angle, int points, bool facingRight)
 	{
+		
 		Vector2[] newPoints = new Vector2[points];
 
 		float o = angle * Mathf.Deg2Rad * ((facingRight) ? 1 : -1);
@@ -81,6 +96,7 @@ public class Hitbox : MonoBehaviour {
 
 	public Collider2D[] GetHits( ContactFilter2D filter )
 	{
+		Collider2D[] results = new Collider2D[16];
 		resultSize = Physics2D.OverlapCollider(GetComponent<Collider2D>(), filter, results);
 		//Debug.Log("Hitbox hit " + resultSize + " entities.");
 		for(int i = resultSize; i < results.Length; i++)
