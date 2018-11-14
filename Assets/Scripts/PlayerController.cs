@@ -4,7 +4,6 @@ using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : GEntity, IDamageable {
-
 	public static PlayerController MainPlayer;
 
 
@@ -439,7 +438,6 @@ public class PlayerController : GEntity, IDamageable {
 	{
 		if (GetGroundState() == GroundState.WALKING)
 			yield return null;
-		Debug.Log("DIVEKICK STARTED");
 
 		Attacking = true;
 		DivekickCharged = false;
