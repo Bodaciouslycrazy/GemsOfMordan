@@ -102,11 +102,12 @@ public class Pathfinder : ScriptableObject {
 
 	private List<Vector2> FinalizePositions(List<Vector2Int> NodeList)
 	{
+		Vector2 offset = tm.cellSize / 2;
 		List<Vector2> Positions = new List<Vector2>();
 		for(int i = 0; i < NodeList.Count; i++)
 		{
 			Vector3Int cell = new Vector3Int(NodeList[i].x, NodeList[i].y, 0);
-			Positions.Add(tm.CellToWorld(cell));
+			Positions.Add(((Vector2)tm.CellToWorld(cell)) + offset);
 		}
 
 		return Positions;
