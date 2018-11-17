@@ -4,10 +4,16 @@ using UnityEngine;
 
 public class Zapper : GEntity, IDamageable {
 
+	public GameObject ProjectilePref;
+
 	public float AggroDist = 10f;
 	public float MoveSpeed = 2.5f;
 	public float TargetDist = 1f;
 	public float FireDelay = 1f;
+	public float FireCooldown = 1f;
+	public float ProjectileSpeed = 5;
+
+	public float StunLength = .5f;
 
 	private List<Vector2> CurPath;
 
@@ -49,8 +55,11 @@ public class Zapper : GEntity, IDamageable {
 		}
 		else if(CurAIState == AIState.PATHING)
 		{
-			if (CurPath.Count > 1 && Vector2.Distance(transform.position, CurPath[0]) < 0.05)
+			if (CurPath.Count > 1 && Vector2.Distance(transform.position, CurPath[0]) < 0.3)
 				CurPath.RemoveAt(0);
+
+			if ((CurPath[0].x > transform.position.x) != GetFacingRight())
+				SetFacingRight(!GetFacingRight());
 
 			rb.MovePosition(Vector3.MoveTowards(transform.position, CurPath[0], Time.fixedDeltaTime * MoveSpeed));
 
@@ -58,7 +67,7 @@ public class Zapper : GEntity, IDamageable {
 			{
 				SetAIState(AIState.ALIGNING);
 			}
-			else if(TimeInState >= 3)
+			else if(TimeInState >= 1.2f)
 			{
 				GetPath();
 				SetAIState(AIState.PATHING);
@@ -66,7 +75,14 @@ public class Zapper : GEntity, IDamageable {
 		}
 		else if(CurAIState == AIState.ALIGNING)
 		{
-			Vector2 diff = transform.position - PlayerController.MainPlayer.transform.position;
+			Vector2 TargPos = PlayerController.MainPlayer.transform.position;
+			//Face toward player
+			if ((TargPos.x > transform.position.x) != GetFacingRight())
+				SetFacingRight(!GetFacingRight());
+
+			if (transform.position.x < TargPos.x) TargPos -= new Vector2(TargetDist, 0);
+			else TargPos += new Vector2(TargetDist, 0);
+			Vector2 diff = ((Vector2)transform.position) - TargPos;
 
 			//Do y var
 			float dy = 0;
@@ -75,6 +91,9 @@ public class Zapper : GEntity, IDamageable {
 
 			//Do x var
 			float dx = 0;
+			if (diff.x > 0.05 || diff.x < -0.05)
+				dx = diff.x > 0 ? -1 : 1;
+
 
 			//Combine, and find new position
 			Vector2 move = new Vector2(dx, dy).normalized * Time.fixedDeltaTime * MoveSpeed;
@@ -85,11 +104,43 @@ public class Zapper : GEntity, IDamageable {
 				GetPath();
 				SetAIState(AIState.PATHING);
 			}
-			else if(dy == 0)
+			else if(dy == 0 && diff.magnitude <= 5)
 			{
 				//State transition to charging!
+				SetAIState(AIState.CHARGING);
 			}
 		}
+		else if(CurAIState == AIState.CHARGING)
+		{
+			if(TimeInState >= FireDelay)
+			{
+				//Fire the shot
+				//Debug.Log("PEW PEW PEW!");
+				Fire();
+				SetAIState(AIState.COOLDOWN);
+			}
+		}
+		else if(CurAIState == AIState.COOLDOWN)
+		{
+			if (TimeInState >= FireCooldown)
+				SetAIState(AIState.IDLE);
+		}
+		else if(CurAIState == AIState.STUNNED)
+		{
+			if (TimeInState >= StunLength)
+				SetAIState(AIState.IDLE);
+		}
+	}
+
+	public void Fire()
+	{
+		float xmod = GetFacingRight() ? 1 : -1;
+
+		Vector2 pos = (Vector2)transform.position + new Vector2(0.5f * xmod, 0);
+		Vector2 vel = new Vector2(xmod * ProjectileSpeed, 0);
+
+		GameObject proj = Instantiate(ProjectilePref, pos, Quaternion.identity);
+		proj.GetComponent<Rigidbody2D>().velocity = vel;
 	}
 
 	private bool IsInLOS()
@@ -115,7 +166,7 @@ public class Zapper : GEntity, IDamageable {
 	public void OnHurt()
 	{
 		SetAIState(AIState.STUNNED);
-		rb.velocity = new Vector2(0, 4f);
+		rb.velocity = new Vector2(0, 0f);
 		anim.SetTrigger("Hurt");
 	}
 

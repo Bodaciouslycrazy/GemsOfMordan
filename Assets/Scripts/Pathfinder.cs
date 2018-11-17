@@ -162,7 +162,9 @@ public class Pathfinder : ScriptableObject {
 
 	public void Reset()
 	{
-		Queue.Clear();
-		Closed.Clear();
+		Queue = CreateInstance<NodePriorityQueue>();
+		Closed = new List<PFNode>();
+		//Queue.Clear();
+		//Closed.Clear();
 	}
 }

@@ -7,11 +7,12 @@ public class PlayerController : GEntity, IDamageable {
 	public static PlayerController MainPlayer;
 
 
-	public Gem CurGem = Gem.NONE;
-	public enum Gem
+	public EnumGem CurGem = EnumGem.NONE;
+	public enum EnumGem
 	{
 		NONE,
-		AIR
+		AIR,
+		ZAP
 	}
 
 	[Header("Movement")]
@@ -39,6 +40,14 @@ public class PlayerController : GEntity, IDamageable {
 	public float DivekickSpeed = 20f;
 	public float DivekickLength = .70f;
 	private bool DivekickCharged = true;
+
+	[Header("LaserAttackVariables")]
+	public GameObject LaserPref;
+	public float LaserMinChargeTime = 0.2f;
+	public float LaserCooldownTime = 0.2f;
+	public float LaserTimePerDamage = 0.85f;
+	public float LaserProjectileSpeed = 10f;
+
 
 
 	[Header("Other Variables")]
@@ -69,7 +78,8 @@ public class PlayerController : GEntity, IDamageable {
 		NONE,
 		JUMP,
 		BASIC_ATTACK,
-		SPECIAL_ATTACK
+		SPECIAL_ATTACK,
+		PICKUP
 	}
 
 	enum EnumDir
@@ -132,6 +142,12 @@ public class PlayerController : GEntity, IDamageable {
 		else if(Input.GetButtonDown("Special"))
 		{
 			QueuedAction = EnumAction.SPECIAL_ATTACK;
+			QueuedActionDirection = GetDirection(RawHorz, RawVert);
+			QueuedActionTime = Time.time;
+		}
+		else if(Input.GetButtonDown("Pickup"))
+		{
+			QueuedAction = EnumAction.PICKUP;
 			QueuedActionDirection = GetDirection(RawHorz, RawVert);
 			QueuedActionTime = Time.time;
 		}
@@ -210,6 +226,10 @@ public class PlayerController : GEntity, IDamageable {
 				//Special Attack
 				ChooseSpecial();
 			}
+			else if(QueuedAction == EnumAction.PICKUP)
+			{
+				PickupGem();
+			}
 		}
 
 		//Do state transitions!
@@ -272,9 +292,9 @@ public class PlayerController : GEntity, IDamageable {
 
 	private void ChooseSpecial()
 	{
-		if (CurGem == Gem.NONE)
+		if (CurGem == EnumGem.NONE)
 			return;
-		else if(CurGem == Gem.AIR)
+		else if(CurGem == EnumGem.AIR)
 		{
 			if(IsDirectionAdjacent(QueuedActionDirection, EnumDir.S) && DivekickCharged)
 			{
@@ -286,6 +306,11 @@ public class PlayerController : GEntity, IDamageable {
 				StartAction("Fly");
 				QueuedAction = EnumAction.NONE;
 			}
+		}
+		else if(CurGem == EnumGem.ZAP)
+		{
+			StartAction("Laser");
+			QueuedAction = EnumAction.NONE;
 		}
 	}
 
@@ -324,6 +349,8 @@ public class PlayerController : GEntity, IDamageable {
 			ActionRoutine = DiveKick();
 		else if (aName == "Knockback")
 			ActionRoutine = Knockback();
+		else if (aName == "Laser")
+			ActionRoutine = Laser();
 
 		anim.ResetTrigger("EndAttack");
 
@@ -427,7 +454,8 @@ public class PlayerController : GEntity, IDamageable {
 
 		//Allow the player to float out of the attack?
 		//floating = true;
-		rb.velocity = Vector2.zero;
+		rb.velocity = new Vector2(0, 10);
+		forceFloating = true;
 		hb.StopAnimation();
 		anim.SetTrigger("EndAttack");
 		RoutineRequiresEndTrigger = false;
@@ -511,6 +539,41 @@ public class PlayerController : GEntity, IDamageable {
 		yield return null;
 	}
 
+	public IEnumerator Laser()
+	{
+		Attacking = true;
+		anim.SetTrigger("LaserCharge");
+
+		rb.velocity = new Vector2(0, -.2f);
+
+		float waited = 0f;
+
+		while(Input.GetButton("Special") || waited < 0.15)
+		{
+			rb.AddForce(Physics2D.gravity * -1 * rb.mass);
+			waited += Time.fixedDeltaTime;
+			yield return new WaitForFixedUpdate();
+		}
+
+		float xmod = GetFacingRight() ? 1f : -1f;
+		int ldam = Mathf.Min(3, (int)(waited / 0.85) + 1);
+		GameObject proj = Instantiate(LaserPref, (Vector2)transform.position + new Vector2(0.5f * xmod, 0), Quaternion.identity);
+		proj.GetComponent<Rigidbody2D>().velocity = new Vector2(xmod * LaserProjectileSpeed, 0);
+		proj.GetComponent<Projectile>().Damage = ldam;
+
+		anim.SetTrigger("LaserFire");
+
+		waited = 0;
+		while(waited < LaserCooldownTime)
+		{
+			waited += Time.fixedDeltaTime;
+			yield return new WaitForFixedUpdate();
+		}
+
+		anim.SetTrigger("EndAttack");
+
+	}
+
 	private IEnumerator Knockback()
 	{
 		//Debug.Log("Knockback started");
@@ -543,6 +606,15 @@ public class PlayerController : GEntity, IDamageable {
 		//STOP THE CURRENT ATTACK ENUMERATOR
 	}
 
+	private void PickupGem()
+	{
+		Gem g = Gem.FindClosestGem(transform.position);
+
+		if(g != null && Vector2.Distance(transform.position, g.transform.position) < 1f)
+		{
+			CurGem = g.Collect();
+		}
+	}
 
 	/*
 	public void FreeHitboxes()

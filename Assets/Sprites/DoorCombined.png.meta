@@ -1,16 +1,11 @@
 fileFormatVersion: 2
-guid: 92c5a913b5c5fa64eaebea7f2a48bcf5
+guid: 2938fe5cbf94f6d4b916783fbb775047
 TextureImporter:
   fileIDToRecycleName:
-    21300000: AttackCombined_0
-    21300002: AttackCombined_1
-    21300004: AttackCombined_2
-    21300006: AttackCombined_3
-    21300008: AttackCombined_4
-    21300010: AttackCombined_5
-    21300012: AttackCombined_6
-    21300014: AttackCombined_7
-    21300016: AttackCombined_8
+    21300000: DoorCombined_0
+    21300002: DoorCombined_1
+    21300004: DoorCombined_2
+    21300006: DoorCombined_3
   externalObjects: {}
   serializedVersion: 7
   mipmaps:
@@ -89,117 +84,90 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     androidETC2FallbackOverride: 0
+  - serializedVersion: 2
+    buildTarget: iPhone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+  - serializedVersion: 2
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+  - serializedVersion: 2
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: AttackCombined_0
+      name: DoorCombined_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 96
+        y: 32
         width: 32
         height: 32
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ea12c65dd412ef04aa6871243d783645
+      spriteID: 897eb32fdba9ec04e97b930e5c51c54b
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: AttackCombined_1
+      name: DoorCombined_1
       rect:
         serializedVersion: 2
         x: 32
-        y: 96
+        y: 32
         width: 32
         height: 32
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 72647d0915e90a840ab61c40103c80d1
+      spriteID: 5739a8d11f9a2c84884f0bb60531daf0
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: AttackCombined_2
-      rect:
-        serializedVersion: 2
-        x: 64
-        y: 96
-        width: 32
-        height: 32
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: a84499a129ae7954aafb7618766e4378
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: AttackCombined_3
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 48
-        width: 64
-        height: 48
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 253fb52ff2a453b46bec837373a8607d
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: AttackCombined_4
+      name: DoorCombined_2
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 48
-        height: 48
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: d8b71b6a8f32d7a4eac2cae5224d14e8
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: AttackCombined_5
-      rect:
-        serializedVersion: 2
-        x: 96
-        y: 112
         width: 32
-        height: 16
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -207,19 +175,19 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8e569a6f29c8f14489cf28cb14cb0e07
+      spriteID: 09af55c7552b8f74fbe63fbddebde82e
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: AttackCombined_6
+      name: DoorCombined_3
       rect:
         serializedVersion: 2
-        x: 96
-        y: 96
+        x: 32
+        y: 0
         width: 32
-        height: 16
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -227,47 +195,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ae4bc8d91919b3e47a77d1aaa58ab4e7
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: AttackCombined_7
-      rect:
-        serializedVersion: 2
-        x: 96
-        y: 80
-        width: 32
-        height: 16
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 8d79a828f744be847a1d942394490458
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: AttackCombined_8
-      rect:
-        serializedVersion: 2
-        x: 96
-        y: 64
-        width: 32
-        height: 16
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 0c57c98c73e9fe540a9cf5a48f170d39
+      spriteID: 291f4990817966d4da406442e4f3a8bf
       vertices: []
       indices: 
       edges: []
@@ -275,7 +203,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: aaae4dfca087f2341955e56d7df16438
+    spriteID: 2661b06acbe2ab94ab883e74bb57ed6b
     vertices: []
     indices: 
     edges: []

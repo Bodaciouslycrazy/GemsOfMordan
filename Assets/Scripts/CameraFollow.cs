@@ -17,29 +17,9 @@ public class CameraFollow : MonoBehaviour {
 	public float MaxSpeedMult = 2.5f;
 	public float LookaheadPerVel = .35f;
 	public float LookaheadMaxDist = 2.5f;
+	public float VerticalOffset = 0.5f;
 
-	//public float LerpMult = 1f;
-	//public float DistPerVel = .5f;
-	//public float MaxCameraXDist = 2f;
-	//public float MaxHeightAbovePlatform = 5f;
-
-	/*
-	public enum State
-	{
-		MOVING_RIGHT,
-		MOVING_LEFT,
-		TRANSITION_RIGHT,
-		TRANSITION_LEFT
-	}
-	*/
-
-	//public State curState = State.MOVING_RIGHT;
-
-	//private Vector3 oldPos;
-	//private Vector3 targetPos;
 	private Vector2 CurVelocity;
-	//private float timeAcc = 0f;
-	//private float platform = 0f;
 
 	// Use this for initialization
 	void Start () {
@@ -81,7 +61,15 @@ public class CameraFollow : MonoBehaviour {
 			offset = offset.normalized * LookaheadMaxDist;
 		}
 
-		return targ + offset;
+		return targ + offset + new Vector2(0, VerticalOffset);
+	}
+
+	public void CenterCamera()
+	{
+		Vector3 pos = GetTargetPos();
+		pos.z = transform.position.z;
+
+		transform.position = pos;
 	}
 
 	/*
