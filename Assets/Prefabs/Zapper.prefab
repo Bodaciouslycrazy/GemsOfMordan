@@ -109,6 +109,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4635c524e5c0f442ad52ebd380bde47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DropOnDeath: {fileID: 1681616560918458, guid: 2e0c1530e71e45b4492dfe3d3e8793e0,
+    type: 2}
   ProjectilePref: {fileID: 1706243142476408, guid: 9cdab0ad817d2944fa0d34619d40d049,
     type: 2}
   AggroDist: 6.5

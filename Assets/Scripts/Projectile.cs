@@ -6,6 +6,7 @@ public class Projectile : MonoBehaviour {
 
 	public int Damage = 1;
 	public string AttackLayer = "Default";
+	public bool OpenEDoors = false;
 
 	// Use this for initialization
 	void Start () {
@@ -35,10 +36,15 @@ public class Projectile : MonoBehaviour {
 				break;
 
 			Health h = results[i].GetComponent<Health>();
+			EDoor d = results[i].GetComponent<EDoor>();
 
 			if (h != null)
 			{
 				h.Hurt(Damage);
+			}
+			if(d != null)
+			{
+				d.OpenEDoor();
 			}
 
 			Destroy(gameObject);

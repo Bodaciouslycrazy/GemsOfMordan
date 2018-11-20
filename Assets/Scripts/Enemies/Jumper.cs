@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Jumper : GEntity, IDamageable {
 
+	public GameObject DropOnDeath;
+
 	public float AggroDist = 10f;
 	public float JumpPrepareTime = 1f;
 	public float JumpCooldownTime = 1.5f;
@@ -117,6 +119,8 @@ public class Jumper : GEntity, IDamageable {
 
 	public void OnDeath()
 	{
+		Instantiate(DropOnDeath, transform.position, Quaternion.identity);
+
 		Destroy(gameObject);
 	}
 }

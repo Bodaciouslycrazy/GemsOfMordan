@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Zapper : GEntity, IDamageable {
 
+	public GameObject DropOnDeath;
 	public GameObject ProjectilePref;
 
 	public float AggroDist = 10f;
@@ -172,6 +173,8 @@ public class Zapper : GEntity, IDamageable {
 
 	public void OnDeath()
 	{
+		Instantiate(DropOnDeath, transform.position, Quaternion.identity);
+
 		Destroy(gameObject);
 	}
 }
