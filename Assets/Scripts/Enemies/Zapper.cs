@@ -16,7 +16,14 @@ public class Zapper : GEntity, IDamageable {
 
 	public float StunLength = .5f;
 
+	public float PitchSpeed = 0.5f;
+	public float MaxPitch = 3f;
+
+	public AudioClip SFire;
+
 	private List<Vector2> CurPath;
+
+	private AudioSource ChargeAudioSource;
 
 	public AIState CurAIState = AIState.IDLE;
 	private float TimeInState = 0f;
@@ -30,10 +37,26 @@ public class Zapper : GEntity, IDamageable {
 		STUNNED
 	}
 
+	public override void Start()
+	{
+		base.Start();
+		ChargeAudioSource = GetComponent<AudioSource>();
+	}
+
 	private void SetAIState(AIState s)
 	{
 		CurAIState = s;
 		TimeInState = 0f;
+
+		if(s == AIState.CHARGING)
+		{
+			ChargeAudioSource.pitch = 1f;
+			ChargeAudioSource.Play();
+		}
+		else
+		{
+			ChargeAudioSource.Stop();
+		}
 	}
 
 	void FixedUpdate()
@@ -113,6 +136,10 @@ public class Zapper : GEntity, IDamageable {
 		}
 		else if(CurAIState == AIState.CHARGING)
 		{
+			float pitch = ChargeAudioSource.pitch + (Time.fixedDeltaTime * PitchSpeed);
+			if (pitch > MaxPitch) pitch = MaxPitch;
+			ChargeAudioSource.pitch = pitch;
+
 			if(TimeInState >= FireDelay)
 			{
 				//Fire the shot
@@ -135,6 +162,10 @@ public class Zapper : GEntity, IDamageable {
 
 	public void Fire()
 	{
+		AudioSource fas = SoundManager.Singleton.GenerateSound(transform.position, 1f);
+		fas.clip = SFire;
+		fas.Play();
+
 		float xmod = GetFacingRight() ? 1 : -1;
 
 		Vector2 pos = (Vector2)transform.position + new Vector2(0.5f * xmod, 0);

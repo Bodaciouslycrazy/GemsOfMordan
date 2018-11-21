@@ -8,9 +8,11 @@ public class SceneDoorManager : MonoBehaviour {
 	void Start () {
 		SceneDoor[] doors = FindObjectsOfType<SceneDoor>();
 
+		int did = PlayerPrefs.GetInt("DID");
+
 		for(int i = 0; i < doors.Length; i++)
 		{
-			if(doors[i].Id == SceneDoor.LoadId)
+			if(doors[i].Id == did)
 			{
 				PlayerController.MainPlayer.transform.position = doors[i].transform.position;
 				Camera.main.GetComponent<CameraFollow>().CenterCamera();
@@ -18,6 +20,6 @@ public class SceneDoorManager : MonoBehaviour {
 			}
 		}
 
-		Debug.LogError("CAN'T FIND DOOR WITH ID: " + SceneDoor.LoadId);
+		Debug.LogError("CAN'T FIND DOOR WITH ID: " + did);
 	}
 }

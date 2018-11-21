@@ -34,6 +34,12 @@ TextureImporter:
     21300058: MageCombined_29
     21300060: MageCombined_30
     21300062: MageCombined_31
+    21300064: MageCombined_32
+    21300066: MageCombined_33
+    21300068: MageCombined_34
+    21300070: MageCombined_35
+    21300072: MageCombined_36
+    21300074: MageCombined_37
   externalObjects: {}
   serializedVersion: 7
   mipmaps:
@@ -120,7 +126,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 256
+        y: 320
         width: 48
         height: 64
       alignment: 0
@@ -140,7 +146,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 48
-        y: 256
+        y: 320
         width: 48
         height: 64
       alignment: 0
@@ -160,7 +166,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 96
-        y: 256
+        y: 320
         width: 48
         height: 64
       alignment: 0
@@ -180,7 +186,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 144
-        y: 256
+        y: 320
         width: 48
         height: 64
       alignment: 0
@@ -200,7 +206,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 192
-        y: 256
+        y: 320
         width: 48
         height: 64
       alignment: 0
@@ -220,7 +226,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 240
-        y: 256
+        y: 320
         width: 48
         height: 64
       alignment: 0
@@ -240,7 +246,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 192
+        y: 256
         width: 48
         height: 64
       alignment: 0
@@ -260,7 +266,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 48
-        y: 192
+        y: 256
         width: 48
         height: 64
       alignment: 0
@@ -280,7 +286,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 96
-        y: 192
+        y: 256
         width: 48
         height: 64
       alignment: 0
@@ -300,7 +306,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 144
-        y: 192
+        y: 256
         width: 48
         height: 64
       alignment: 0
@@ -320,7 +326,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 192
-        y: 192
+        y: 256
         width: 48
         height: 64
       alignment: 0
@@ -340,7 +346,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 240
-        y: 192
+        y: 256
         width: 48
         height: 64
       alignment: 0
@@ -360,7 +366,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 128
+        y: 192
         width: 48
         height: 64
       alignment: 0
@@ -380,7 +386,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 48
-        y: 128
+        y: 192
         width: 48
         height: 64
       alignment: 0
@@ -400,7 +406,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 96
-        y: 128
+        y: 192
         width: 48
         height: 64
       alignment: 0
@@ -420,7 +426,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 144
-        y: 128
+        y: 192
         width: 48
         height: 64
       alignment: 0
@@ -440,7 +446,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 192
-        y: 128
+        y: 192
         width: 48
         height: 64
       alignment: 0
@@ -459,8 +465,8 @@ TextureImporter:
       name: MageCombined_17
       rect:
         serializedVersion: 2
-        x: 240
-        y: 128
+        x: 241
+        y: 192
         width: 48
         height: 64
       alignment: 0
@@ -480,7 +486,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 64
+        y: 128
         width: 64
         height: 64
       alignment: 0
@@ -500,7 +506,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 64
-        y: 64
+        y: 128
         width: 64
         height: 64
       alignment: 0
@@ -520,7 +526,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 128
-        y: 64
+        y: 128
         width: 64
         height: 64
       alignment: 0
@@ -540,7 +546,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 192
-        y: 64
+        y: 128
         width: 64
         height: 64
       alignment: 0
@@ -560,7 +566,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 256
-        y: 64
+        y: 128
         width: 64
         height: 64
       alignment: 0
@@ -580,7 +586,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 320
-        y: 64
+        y: 128
         width: 64
         height: 64
       alignment: 0
@@ -600,7 +606,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
+        y: 64
         width: 64
         height: 64
       alignment: 0
@@ -620,7 +626,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 64
-        y: 0
+        y: 64
         width: 64
         height: 64
       alignment: 0
@@ -640,7 +646,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 128
-        y: 0
+        y: 64
         width: 64
         height: 64
       alignment: 0
@@ -660,7 +666,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 192
-        y: 0
+        y: 64
         width: 64
         height: 64
       alignment: 0
@@ -680,7 +686,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 256
-        y: 0
+        y: 64
         width: 64
         height: 64
       alignment: 0
@@ -700,7 +706,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 320
-        y: 0
+        y: 64
         width: 64
         height: 64
       alignment: 0
@@ -720,7 +726,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 336
-        y: 256
+        y: 320
         width: 48
         height: 64
       alignment: 0
@@ -740,17 +746,137 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 336
-        y: 192
+        y: 256
         width: 48
         height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
       spriteID: bd582a1a67268a2489e3a86d045cd8ba
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MageCombined_32
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9750be3c946451b49806236ebe881747
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MageCombined_33
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7c1e75d26eba16f47ab7f2edbd7366e9
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MageCombined_34
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3bb5199a9b8cfd44c8ed172e364f9fda
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MageCombined_35
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 13024fb7d7ecbce468217c2b5d49acf4
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MageCombined_36
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5c20eebe8cd133542b60bbfd35d0ec9c
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MageCombined_37
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1209f68496645ef41ad644736a829a87
       vertices: []
       indices: 
       edges: []

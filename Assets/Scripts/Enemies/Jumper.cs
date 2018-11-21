@@ -14,6 +14,8 @@ public class Jumper : GEntity, IDamageable {
 	public float JumpHeight = 3f;
 	public float JumpHorzForce = 10f;
 
+	public AudioClip SJump;
+	public AudioClip SLand;
 
 	public AIState CurAIState = AIState.IDLE;
 	private float TimeInState = 0f;
@@ -62,6 +64,11 @@ public class Jumper : GEntity, IDamageable {
 				rb.AddForce(j, ForceMode2D.Impulse);
 
 				SetAIState(AIState.JUMPED);
+
+				AudioSource jsound = SoundManager.Singleton.GenerateSound(transform.position);
+				jsound.clip = SJump;
+				jsound.volume = 0.75f;
+				jsound.Play();
 			}
 		}
 		else if(CurAIState == AIState.JUMPED)

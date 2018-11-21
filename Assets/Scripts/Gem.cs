@@ -14,10 +14,12 @@ public class Gem : MonoBehaviour {
 	private float curBlinkTime = 0;
 	private bool Blinking = false;
 	private SpriteRenderer sr;
+	private AudioSource audioSource;
 
 	// Use this for initialization
 	void Start () {
 		sr = GetComponent<SpriteRenderer>();
+		audioSource = GetComponent<AudioSource>();
 		Vector2 vel = new Vector2(Random.Range(-3f, 3f), 5f);
 		GetComponent<Rigidbody2D>().velocity = vel;
 	}
@@ -75,5 +77,10 @@ public class Gem : MonoBehaviour {
 		}
 
 		return gems[minIndex];
+	}
+
+	void OnCollisionEnter2D(Collision2D collision)
+	{
+		audioSource.Play();
 	}
 }

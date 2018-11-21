@@ -39,7 +39,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1175577945875178}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -10.93, y: 19.519999, z: 0}
+  m_LocalPosition: {x: -15.17, y: 1.84, z: 0}
   m_LocalScale: {x: 1.75, y: 1.75, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -127,6 +127,8 @@ MonoBehaviour:
   StunLength: 0.5
   JumpHeight: 2.2
   JumpHorzForce: 2
+  SJump: {fileID: 8300000, guid: c91e52590bd17f34fb64e8ffaf9834bd, type: 3}
+  SLand: {fileID: 0}
   CurAIState: 0
 --- !u!114 &114928995840686332
 MonoBehaviour:

@@ -55,6 +55,21 @@ public class Health : MonoBehaviour {
 		}
 	}
 
+	public int GetHealth()
+	{
+		return CurHealth;
+	}
+
+	public void SetHealth(int h)
+	{
+		CurHealth = h;
+	}
+
+	public int GetMaxHealth()
+	{
+		return MaxHealth;
+	}
+
 	public void Hurt(int dam)
 	{
 		if (Invincible)

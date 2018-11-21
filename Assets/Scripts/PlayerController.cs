@@ -47,11 +47,20 @@ public class PlayerController : GEntity, IDamageable {
 	public float LaserCooldownTime = 0.2f;
 	public float LaserTimePerDamage = 0.85f;
 	public float LaserProjectileSpeed = 10f;
-
-
+	public float LaserSoundPitchSpeed = 1f;
+	public float LaserSoundMaxPitch = 3f;
 
 	[Header("Other Variables")]
 	public List<Hitbox> ReservedHitboxes;
+
+	[Header("Sounds")]
+	public AudioClip SPunchMiss;
+	public AudioClip SPunchHit;
+	public AudioClip SJump;
+	public AudioClip SHurt;
+
+	public AudioClip SLaserCharge;
+	public AudioClip SLaserFire;
 
 	//************************
 	//   PRIVATE VARIABLES
@@ -65,6 +74,8 @@ public class PlayerController : GEntity, IDamageable {
 	private bool Attacking = false;
 	private IEnumerator ActionRoutine = null;
 	private bool RoutineRequiresEndTrigger = false;
+
+	private AudioSource SoundLoopSource;
 
 	//Action queue stuff
 	[Header("ActionQueue")]
@@ -104,6 +115,8 @@ public class PlayerController : GEntity, IDamageable {
 	{
 		base.Start();
 		MainPlayer = this;
+		SoundLoopSource = GetComponent<AudioSource>();
+		LoadPlayerState();
 		//ReservedHitboxes = new List<Hitbox>();
 	}
 	
@@ -163,7 +176,7 @@ public class PlayerController : GEntity, IDamageable {
 			SetFacingRight(false);
 		}
 
-		if(Horizontal == 0f && rb.velocity.x == 0f) //player standing still
+		if(Horizontal == 0f && (rb.velocity.x < 0.01f && rb.velocity.x > -0.01f)) //player standing still
 		{
 			//set state to idle
 			anim.SetInteger("Accel", 0);
@@ -322,6 +335,10 @@ public class PlayerController : GEntity, IDamageable {
 			rb.AddForce(new Vector2(0, CalcJumpForce(JumpHeight)), ForceMode2D.Impulse);
 			floating = true;
 
+			AudioSource jsound = SoundManager.Singleton.GenerateSound(transform.position, 1.5f);
+			jsound.clip = SJump;
+			jsound.Play();
+
 			//This anim trigger is not needed. Jump is triggered in FixedUpdate() when the floor is not detected.
 			//anim.SetTrigger("Jump");
 		}
@@ -388,7 +405,7 @@ public class PlayerController : GEntity, IDamageable {
 		hb.PlayAnimation("MageSwipe");
 
 		Collider2D[] results = hb.GetHits();
-
+		bool phit = false;
 		for(int i = 0; i < results.Length; i++)
 		{
 			if (results[i] == null)
@@ -398,8 +415,15 @@ public class PlayerController : GEntity, IDamageable {
 			if (enemyHealth == null)
 				continue;
 
+			phit = true;
 			enemyHealth.Hurt(1);
 		}
+
+		AudioClip p = phit ? SPunchHit : SPunchMiss;
+		AudioSource hbas = SoundManager.Singleton.GenerateSound(hb.transform.position);
+		hbas.clip = p;
+		hbas.volume = 0.5f;
+		hbas.Play();
 
 		yield return null;
 	}
@@ -464,85 +488,89 @@ public class PlayerController : GEntity, IDamageable {
 
 	private IEnumerator DiveKick()
 	{
-		if (GetGroundState() == GroundState.WALKING)
-			yield return null;
-
-		Attacking = true;
-		DivekickCharged = false;
-		RoutineRequiresEndTrigger = true;
-		anim.SetTrigger("DiveKick");
-
-		int xmod = GetFacingRight() ? 1 : -1;
-
-		//Set velocity downwards
-		rb.velocity = new Vector2( xmod, -1).normalized * DivekickSpeed;
-
-		//Hitbox initialization...
-		Hitbox hb = ReservedHitboxes[0];
-		hb.SetPos(new Vector2(xmod * 0.25f, -.5f), transform);
-		hb.SetCollider(2f, 1f, -45, 16, GetFacingRight());
-		hb.PlayAnimation("DiveAttack");
-
-		//List<Health> hitEnemies = new List<Health>();
-		bool hitEnemy = false;
-		float hbTime = DivekickLength;
-		
-
-		//Every frame:
-		while (hbTime > 0)
+		if (GetGroundState() != GroundState.WALKING)
 		{
-			//Add force to combat gravity.
-			rb.AddForce(Physics2D.gravity * -1 * rb.mass);
+			Attacking = true;
+			DivekickCharged = false;
+			RoutineRequiresEndTrigger = true;
+			anim.SetTrigger("DiveKick");
 
-			Collider2D[] results = hb.GetHits();
+			int xmod = GetFacingRight() ? 1 : -1;
 
-			for (int i = 0; i < results.Length; i++)
+			//Set velocity downwards
+			rb.velocity = new Vector2(xmod, -1).normalized * DivekickSpeed;
+
+			//Hitbox initialization...
+			Hitbox hb = ReservedHitboxes[0];
+			hb.SetPos(new Vector2(xmod * 0.25f, -.5f), transform);
+			hb.SetCollider(2f, 1f, -45, 16, GetFacingRight());
+			hb.PlayAnimation("DiveAttack");
+
+			//List<Health> hitEnemies = new List<Health>();
+			bool hitEnemy = false;
+			float hbTime = DivekickLength;
+
+
+			//Every frame:
+			while (hbTime > 0)
 			{
-				if (results[i] == null)
-					break;
+				//Add force to combat gravity.
+				rb.AddForce(Physics2D.gravity * -1 * rb.mass);
 
+				Collider2D[] results = hb.GetHits();
 
-				Health enemy = results[i].GetComponent<Health>();
-				if (enemy != null ) // && !hitEnemies.Contains(enemy))
+				for (int i = 0; i < results.Length; i++)
 				{
-					enemy.Hurt(2);
-					hitEnemy = true;
-					break;
-					//hitEnemies.Add(enemy);
-					//Debug.Log("Fly hit enemy!");
+					if (results[i] == null)
+						break;
+
+
+					Health enemy = results[i].GetComponent<Health>();
+					if (enemy != null) // && !hitEnemies.Contains(enemy))
+					{
+						enemy.Hurt(2);
+						hitEnemy = true;
+						break;
+						//hitEnemies.Add(enemy);
+						//Debug.Log("Fly hit enemy!");
+					}
 				}
+
+				if (hitEnemy)
+					break;
+
+				hbTime -= Time.fixedDeltaTime;
+				yield return new WaitForFixedUpdate();
+
+				if (GetGroundState() == GroundState.WALKING)
+					break;
 			}
 
 			if (hitEnemy)
-				break;
+			{
+				forceFloating = true;
+				rb.velocity = new Vector2(-xmod * 2, 8);
+			}
+			else
+			{
+				rb.velocity = Vector2.zero;
+			}
 
-			hbTime -= Time.fixedDeltaTime;
-			yield return new WaitForFixedUpdate();
+			hb.StopAnimation();
+			anim.SetTrigger("EndAttack");
+			RoutineRequiresEndTrigger = false;
 
-			if (GetGroundState() == GroundState.WALKING)
-				break;
 		}
-
-		if(hitEnemy)
-		{
-			forceFloating = true;
-			rb.velocity = new Vector2(-xmod * 2, 8);
-		}
-		else
-		{
-			rb.velocity = Vector2.zero;
-		}
-
-		hb.StopAnimation();
-		anim.SetTrigger("EndAttack");
-		RoutineRequiresEndTrigger = false;
-		yield return null;
 	}
 
 	public IEnumerator Laser()
 	{
 		Attacking = true;
-		anim.SetTrigger("LaserCharge");
+		anim.SetTrigger("ChargeLaser");
+		SoundLoopSource.clip = SLaserCharge;
+		SoundLoopSource.volume = 0.75f;
+		SoundLoopSource.pitch = 1f;
+		SoundLoopSource.Play();
 
 		rb.velocity = new Vector2(0, -.2f);
 
@@ -552,6 +580,12 @@ public class PlayerController : GEntity, IDamageable {
 		{
 			rb.AddForce(Physics2D.gravity * -1 * rb.mass);
 			waited += Time.fixedDeltaTime;
+
+			//Add pitch to looping sound
+			float pitch = SoundLoopSource.pitch + (Time.fixedDeltaTime * LaserSoundPitchSpeed);
+			if (pitch > LaserSoundMaxPitch) pitch = LaserSoundMaxPitch;
+			SoundLoopSource.pitch = pitch;
+
 			yield return new WaitForFixedUpdate();
 		}
 
@@ -561,8 +595,15 @@ public class PlayerController : GEntity, IDamageable {
 		proj.GetComponent<Rigidbody2D>().velocity = new Vector2(xmod * LaserProjectileSpeed, 0);
 		proj.GetComponent<Projectile>().Damage = ldam;
 
-		anim.SetTrigger("LaserFire");
+		anim.SetTrigger("Punch");
 
+		SoundLoopSource.Stop();
+
+		AudioSource fas = SoundManager.Singleton.GenerateSound(transform.position, 1f);
+		fas.clip = SLaserFire;
+		fas.Play();
+
+		//Cooldown wait
 		waited = 0;
 		while(waited < LaserCooldownTime)
 		{
@@ -632,7 +673,7 @@ public class PlayerController : GEntity, IDamageable {
 
 
 	//**************************************************************
-	//							OTHER PHYSICS
+	//							OTHER
 	//**************************************************************
 	
 
@@ -670,6 +711,19 @@ public class PlayerController : GEntity, IDamageable {
 			return false;
 	}
 
+	public void SavePlayerState()
+	{
+		PlayerPrefs.SetInt("PHEALTH", GetComponent<Health>().GetHealth());
+		PlayerPrefs.SetInt("PGEM", (int)CurGem);
+	}
+
+	public void LoadPlayerState()
+	{
+		int h = PlayerPrefs.GetInt("PHEALTH", 5);
+		GetComponent<Health>().SetHealth(h);
+		CurGem = (EnumGem)PlayerPrefs.GetInt("PGEM", 0);
+	}
+
 
 
 	//*****************************************************
@@ -678,6 +732,11 @@ public class PlayerController : GEntity, IDamageable {
 
 	public void OnHurt()
 	{
+		AudioSource hurtSound = SoundManager.Singleton.GenerateSound(transform.position, 1.5f);
+		hurtSound.clip = SHurt;
+		hurtSound.Play();
+
+
 		StartAction("Knockback");
 	}
 

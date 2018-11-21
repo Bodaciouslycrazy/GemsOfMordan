@@ -27,4 +27,14 @@ public class GlobalPathfinder : MonoBehaviour {
 		pf.Reset();
 		return pf.FindPath(from, to);
 	}
+
+	public Vector3Int GetCoors(Vector2 pos)
+	{
+		return TM.WorldToCell(pos);
+	}
+
+	public bool HasTile(Vector3Int pos)
+	{
+		return TM.HasTile(pos);
+	}
 }

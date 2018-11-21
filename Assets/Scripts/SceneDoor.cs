@@ -5,8 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class SceneDoor : MonoBehaviour {
 
-	public static int LoadId = 0;
-	public static string LoadScene = "";
+	//public static int LoadId = 0;
+	//public static string LoadScene = "";
 
 	public int Id = 1;
 	public string DestinationScene;
@@ -33,10 +33,12 @@ public class SceneDoor : MonoBehaviour {
 
 		if(Visible && Vector3.Distance(PlayerController.MainPlayer.transform.position, transform.position) < 0.5f && upThisFrame && !upLastFrame)
 		{
-			LoadId = DestinationId;
-			LoadScene = DestinationScene;
+			PlayerController.MainPlayer.SavePlayerState();
 
-			SceneManager.LoadScene(LoadScene);
+			PlayerPrefs.SetInt("DID",DestinationId);
+			PlayerPrefs.SetString("DSCENE",DestinationScene);
+
+			SceneManager.LoadScene(DestinationScene);
 		}
 
 		upLastFrame = upThisFrame;
