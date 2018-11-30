@@ -21,6 +21,9 @@ public class SceneDoor : MonoBehaviour {
 	void Start () {
 		if (!Visible)
 			GetComponent<SpriteRenderer>().enabled = false;
+
+		if (RequireKeys && !HasKeys())
+			GetComponent<Animator>().SetBool("Open", false);
 	}
 	
 	// Update is called once per frame
