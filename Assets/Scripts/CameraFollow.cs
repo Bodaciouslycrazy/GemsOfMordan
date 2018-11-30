@@ -66,6 +66,9 @@ public class CameraFollow : MonoBehaviour {
 
 	public void CenterCamera()
 	{
+		if (!enabled)
+			return;
+
 		Vector3 pos = GetTargetPos();
 		pos.z = transform.position.z;
 

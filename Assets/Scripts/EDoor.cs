@@ -17,6 +17,7 @@ public class EDoor : MonoBehaviour {
 	{
 		anim.SetTrigger("Open");
 		coll.enabled = false;
+		GetComponent<AudioSource>().Play();
 	}
 	
 }

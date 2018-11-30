@@ -79,7 +79,9 @@ public class Zapper : GEntity, IDamageable {
 		}
 		else if(CurAIState == AIState.PATHING)
 		{
-			if (CurPath.Count > 1 && Vector2.Distance(transform.position, CurPath[0]) < 0.3)
+			if (CurPath == null)
+				SetAIState(AIState.IDLE);
+			else if (CurPath.Count > 1 && Vector2.Distance(transform.position, CurPath[0]) < 0.3)
 				CurPath.RemoveAt(0);
 
 			if ((CurPath[0].x > transform.position.x) != GetFacingRight())

@@ -18,4 +18,15 @@ public class SoundManager : MonoBehaviour {
 		Destroy(obj, time);
 		return obj.GetComponent<AudioSource>();
 	}
+
+	public AudioSource GenerateSound(Vector3 pos, AudioClip clip, float vol = 1f, float time = 1f)
+	{
+		GameObject obj = Instantiate(SoundPref, pos, Quaternion.identity);
+		Destroy(obj, time);
+
+		AudioSource source = obj.GetComponent<AudioSource>();
+		source.clip = clip;
+		source.volume = vol;
+		return source;
+	}
 }

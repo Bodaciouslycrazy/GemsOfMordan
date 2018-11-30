@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : GEntity, IDamageable {
@@ -62,9 +63,12 @@ public class PlayerController : GEntity, IDamageable {
 	public AudioClip SLaserCharge;
 	public AudioClip SLaserFire;
 
+	public AudioClip SFlyWind;
+
 	//************************
 	//   PRIVATE VARIABLES
 	//************************
+	private bool Dead = false;
 	private float Horizontal = 0f;
 	private float Vertical = 0f;
 	private int NumInputsStored = 0;
@@ -127,7 +131,12 @@ public class PlayerController : GEntity, IDamageable {
 		float RawHorz = Input.GetAxisRaw("Horizontal");
 		float RawVert = Input.GetAxisRaw("Vertical");
 
-		if (NumInputsStored == 0)
+		if(Dead)
+		{
+			Horizontal = 0;
+			Vertical = 0;
+		}
+		else if (NumInputsStored == 0)
 		{
 			Horizontal = RawHorz;
 			Vertical = RawVert;
@@ -205,7 +214,7 @@ public class PlayerController : GEntity, IDamageable {
 	{
 
 		//Complete the queued action, if possible.
-		if(!Attacking && Time.time - QueuedActionTime < MaxQueueTime)
+		if(!Attacking && Time.time - QueuedActionTime < MaxQueueTime && !Dead)
 		{
 			//Complete the queued action
 			//If an action is completed, make sure to make the QueuedAction NONE so that the action doesn't happen again.
@@ -293,7 +302,7 @@ public class PlayerController : GEntity, IDamageable {
 				accelY = dvy / Time.fixedDeltaTime;
 			}
 		}
-
+		
 		rb.AddForce(new Vector2(accelX * rb.mass, accelY * rb.mass), ForceMode2D.Force);
 
 		//Update ground variables!
@@ -305,7 +314,7 @@ public class PlayerController : GEntity, IDamageable {
 
 	private void ChooseSpecial()
 	{
-		if (CurGem == EnumGem.NONE)
+		if (CurGem == EnumGem.NONE || Dead)
 			return;
 		else if(CurGem == EnumGem.AIR)
 		{
@@ -358,7 +367,9 @@ public class PlayerController : GEntity, IDamageable {
 			EndAction();
 		}
 
-		if (aName == "Punch")
+		if (Dead)
+			return;
+		else if (aName == "Punch")
 			ActionRoutine = Punch();
 		else if (aName == "Fly")
 			ActionRoutine = Fly();
@@ -436,6 +447,10 @@ public class PlayerController : GEntity, IDamageable {
 		RoutineRequiresEndTrigger = true;
 		anim.SetTrigger("Fly");
 
+		//Sound
+		SoundLoopSource.clip = SFlyWind;
+		SoundLoopSource.volume = 0.3f;
+		SoundLoopSource.Play();
 
 		//Set velocity upwards
 		rb.velocity = new Vector2(0, FlyYVelocity);
@@ -468,6 +483,7 @@ public class PlayerController : GEntity, IDamageable {
 				{
 					enemy.Hurt(2);
 					hitEnemies.Add(enemy);
+					SoundManager.Singleton.GenerateSound(enemy.transform.position, SPunchHit, 0.5f, 1f).Play();
 					//Debug.Log("Fly hit enemy!");
 				}
 			}
@@ -476,12 +492,15 @@ public class PlayerController : GEntity, IDamageable {
 			yield return new WaitForFixedUpdate();
 		}
 
+
+
 		//Allow the player to float out of the attack?
 		//floating = true;
 		rb.velocity = new Vector2(0, 10);
 		forceFloating = true;
 		hb.StopAnimation();
 		anim.SetTrigger("EndAttack");
+		SoundLoopSource.Play();
 		RoutineRequiresEndTrigger = false;
 		yield return null;
 	}
@@ -494,6 +513,10 @@ public class PlayerController : GEntity, IDamageable {
 			DivekickCharged = false;
 			RoutineRequiresEndTrigger = true;
 			anim.SetTrigger("DiveKick");
+
+			SoundLoopSource.clip = SFlyWind;
+			SoundLoopSource.volume = 0.3f;
+			SoundLoopSource.Play();
 
 			int xmod = GetFacingRight() ? 1 : -1;
 
@@ -530,6 +553,7 @@ public class PlayerController : GEntity, IDamageable {
 					{
 						enemy.Hurt(2);
 						hitEnemy = true;
+						SoundManager.Singleton.GenerateSound(enemy.transform.position, SPunchHit, 0.5f, 1f).Play();
 						break;
 						//hitEnemies.Add(enemy);
 						//Debug.Log("Fly hit enemy!");
@@ -558,6 +582,7 @@ public class PlayerController : GEntity, IDamageable {
 
 			hb.StopAnimation();
 			anim.SetTrigger("EndAttack");
+			SoundLoopSource.Stop();
 			RoutineRequiresEndTrigger = false;
 
 		}
@@ -633,10 +658,18 @@ public class PlayerController : GEntity, IDamageable {
 		yield return null;
 	}
 
+	private IEnumerator Death()
+	{
+		yield return new WaitForSeconds(2f);
+		SceneManager.LoadScene(PlayerPrefs.GetString("DSCENE", "Start"));
+		MusicBox.Singleton.RestartSong();
+	}
+
 		#endregion
 
 	public void EndAction()
 	{
+		SoundLoopSource.Stop();
 		Attacking = false;
 		if (RoutineRequiresEndTrigger)
 		{
@@ -732,9 +765,7 @@ public class PlayerController : GEntity, IDamageable {
 
 	public void OnHurt()
 	{
-		AudioSource hurtSound = SoundManager.Singleton.GenerateSound(transform.position, 1.5f);
-		hurtSound.clip = SHurt;
-		hurtSound.Play();
+		SoundManager.Singleton.GenerateSound(transform.position, SHurt, 1f, 1.5f).Play();
 
 
 		StartAction("Knockback");
@@ -743,7 +774,17 @@ public class PlayerController : GEntity, IDamageable {
 	public void OnDeath()
 	{
 		//There has to be something better than just destroying the character. Death animation maybe?
-		Destroy(gameObject);
+		//Destroy(gameObject);
+		if (Dead)
+			return;
+
+		Dead = true;
+		PlayerPrefs.SetInt("PHEALTH", 5);
+		PlayerPrefs.SetInt("PGEM", 0);
+		anim.SetTrigger("Death");
+		SoundManager.Singleton.GenerateSound(transform.position, SHurt, 1f, 1.5f).Play();
+
+		StartCoroutine(Death());
 	}
 
 	//Other Variables

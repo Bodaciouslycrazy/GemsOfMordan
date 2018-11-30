@@ -11,6 +11,7 @@ public class SceneDoor : MonoBehaviour {
 	public int Id = 1;
 	public string DestinationScene;
 	public int DestinationId;
+	public bool RequireKeys = false;
 
 	public bool Visible = true;
 
@@ -31,7 +32,7 @@ public class SceneDoor : MonoBehaviour {
 	{
 		bool upThisFrame = Input.GetAxisRaw("Vertical") == 1f;
 
-		if(Visible && Vector3.Distance(PlayerController.MainPlayer.transform.position, transform.position) < 0.5f && upThisFrame && !upLastFrame)
+		if(Visible && Vector3.Distance(PlayerController.MainPlayer.transform.position, transform.position) < 0.5f && upThisFrame && !upLastFrame && (!RequireKeys || HasKeys()))
 		{
 			PlayerController.MainPlayer.SavePlayerState();
 
@@ -42,5 +43,15 @@ public class SceneDoor : MonoBehaviour {
 		}
 
 		upLastFrame = upThisFrame;
+	}
+	public bool HasKeys()
+	{
+		for(int i = 0; i < 3; i++)
+		{
+			if (PlayerPrefs.GetInt("Key" + i, 1) == 1)
+				return false;
+		}
+
+		return true;
 	}
 }

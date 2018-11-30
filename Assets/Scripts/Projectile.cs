@@ -27,28 +27,27 @@ public class Projectile : MonoBehaviour {
 	{
 		ContactFilter2D filter = new ContactFilter2D();
 		filter.SetLayerMask(LayerMask.GetMask(AttackLayer, "Terrain"));
-		Collider2D[] results = new Collider2D[4];
+		Collider2D[] results = new Collider2D[1];
 		int resultSize = Physics2D.OverlapCollider(GetComponent<Collider2D>(), filter, results);
 
-		for (int i = 0; i < 4; i++)
-		{
-			if (results[i] == null)
-				break;
 
-			Health h = results[i].GetComponent<Health>();
-			EDoor d = results[i].GetComponent<EDoor>();
-
-			if (h != null)
-			{
-				h.Hurt(Damage);
-			}
-			if(d != null)
-			{
-				d.OpenEDoor();
-			}
-
-			Destroy(gameObject);
+		if (results[0] == null)
 			return;
+
+		Health h = results[0].GetComponent<Health>();
+		EDoor d = results[0].GetComponent<EDoor>();
+
+		if (h != null)
+		{
+			h.Hurt(Damage);
 		}
+		if(d != null && OpenEDoors)
+		{
+			d.OpenEDoor();
+		}
+
+		Destroy(gameObject);
+		return;
+		
 	}
 }
