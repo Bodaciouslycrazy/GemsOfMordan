@@ -12,31 +12,15 @@ public class GEntity : MonoBehaviour {
 
 	protected float GroundAngleTolerance = .01f;
 
-	private GroundState CurrentGroundState = GroundState.WALKING;
 
-	public enum GroundState
-	{
-		WALKING,
-		IN_AIR
-	}
-
-	protected bool groundThisFrame = true;
-	protected bool groundLastFrame = true;
+	private bool groundThisFrame = true;
+	private bool groundLastFrame = true;
 
 	public virtual void Start()
 	{
 		sr = GetComponent<SpriteRenderer>();
 		rb = GetComponent<Rigidbody2D>();
 		anim = GetComponent<Animator>();
-	}
-
-	void OnCollisionStay2D(Collision2D other)
-	{
-		foreach (ContactPoint2D contact in other.contacts)
-		{
-			if (Vector2.Dot(contact.normal, Vector2.up) > GroundAngleTolerance)
-				groundThisFrame = true;
-		}
 	}
 
 	protected bool GetFacingRight()
@@ -50,42 +34,57 @@ public class GEntity : MonoBehaviour {
 		GetComponent<SpriteRenderer>().flipX = !s;
 	}
 
-	protected virtual void SetGroundState(GroundState s)
+	//Ground Calculations
+
+	protected bool IsGrounded()
 	{
-		CurrentGroundState = s;
-		anim.SetBool("OnGround", (s == GroundState.WALKING));
+		return groundThisFrame;
 	}
 
-	protected GroundState GetGroundState()
-	{
-		return CurrentGroundState;
-	}
-
-	protected GroundState UpdateGroundState()
-	{
-		if (groundThisFrame && CurrentGroundState == GroundState.IN_AIR)
-		{
-			SetGroundState(GroundState.WALKING);
-			//anim.SetBool("OnGround", true);
-		}
-		else if (!groundThisFrame && CurrentGroundState == GroundState.WALKING)
-		{
-			SetGroundState(GroundState.IN_AIR);
-			//anim.SetBool("OnGround", false);
-		}
-
-		return GetGroundState();
-	}
-
-	public bool WasOnGround()
+	public bool WasGrounded()
 	{
 		return groundLastFrame;
+	}
+
+	protected bool UpdateGroundState()
+	{
+		if (groundThisFrame && !groundLastFrame)
+		{
+			anim.SetBool("OnGround", true);
+			OnLand();
+		}
+		else if (!groundThisFrame && groundLastFrame)
+		{
+			anim.SetBool("OnGround", false);
+			OnLift();
+		}
+
+		return groundThisFrame;
 	}
 
 	protected void GroundFrameEnd()
 	{
 		groundLastFrame = groundThisFrame;
 		groundThisFrame = false;
+	}
+
+	void OnCollisionStay2D(Collision2D other)
+	{
+		foreach (ContactPoint2D contact in other.contacts)
+		{
+			if (Vector2.Dot(contact.normal, Vector2.up) > GroundAngleTolerance)
+				groundThisFrame = true;
+		}
+	}
+
+	protected virtual void OnLand()
+	{
+		
+	}
+
+	protected virtual void OnLift()
+	{
+
 	}
 
 	protected float CalcJumpForce(float height, float grav)

@@ -219,7 +219,7 @@ public class PlayerController : GEntity, IDamageable {
 			//Complete the queued action
 			//If an action is completed, make sure to make the QueuedAction NONE so that the action doesn't happen again.
 			
-			if(QueuedAction == EnumAction.JUMP && GetGroundState() != GroundState.IN_AIR)
+			if(QueuedAction == EnumAction.JUMP && IsGrounded())
 			{
 				//JUMP
 				//Debug.Log("Jumping");
@@ -256,12 +256,13 @@ public class PlayerController : GEntity, IDamageable {
 
 		//Do state transitions!
 		UpdateGroundState();
+		//Debug.Log(WasOnGround() + " -> " + IsGrounded());
 
 
 		//Now that we have completed the action queue, do movement!
 		float accelX = 0;
 		float accelY = 0;
-		if (GetGroundState() == GroundState.WALKING)
+		if (IsGrounded())
 		{
 			float targetXVel = Horizontal * MaxSpeed;
 			if (Attacking) targetXVel = 0;
@@ -273,7 +274,7 @@ public class PlayerController : GEntity, IDamageable {
 			else if (accelX < -GroundAccel)
 				accelX = -GroundAccel;
 		}
-		else if(GetGroundState() == GroundState.IN_AIR)
+		else if(!IsGrounded())
 		{
 			
 			float dv = Horizontal * AirAccel * Time.fixedDeltaTime;
@@ -339,7 +340,7 @@ public class PlayerController : GEntity, IDamageable {
 	private void Jump()
 	{
 		// Jumping
-		if (GetGroundState() != GroundState.IN_AIR)
+		if (IsGrounded())
 		{
 			rb.AddForce(new Vector2(0, CalcJumpForce(JumpHeight)), ForceMode2D.Impulse);
 			floating = true;
@@ -396,7 +397,7 @@ public class PlayerController : GEntity, IDamageable {
 		anim.SetTrigger("Punch");
 
 		//Air physics are weird.
-		if (GetGroundState() == GroundState.IN_AIR)
+		if (!IsGrounded())
 		{
 			Vector2 newVel = rb.velocity;
 			if(newVel.y < PunchVerticalVel) newVel.y = PunchVerticalVel;
@@ -507,7 +508,7 @@ public class PlayerController : GEntity, IDamageable {
 
 	private IEnumerator DiveKick()
 	{
-		if (GetGroundState() != GroundState.WALKING)
+		if (IsGrounded())
 		{
 			Attacking = true;
 			DivekickCharged = false;
@@ -566,7 +567,7 @@ public class PlayerController : GEntity, IDamageable {
 				hbTime -= Time.fixedDeltaTime;
 				yield return new WaitForFixedUpdate();
 
-				if (GetGroundState() == GroundState.WALKING)
+				if (IsGrounded())
 					break;
 			}
 
@@ -789,6 +790,7 @@ public class PlayerController : GEntity, IDamageable {
 
 	//Other Variables
 
+	/*
 	protected override void SetGroundState(GroundState s)
 	{
 		base.SetGroundState(s);
@@ -798,6 +800,14 @@ public class PlayerController : GEntity, IDamageable {
 			FlyAttackCharged = true;
 			DivekickCharged = true;
 		}
+	}
+	*/
+	protected override void OnLand()
+	{
+		base.OnLand();
+		forceFloating = false;
+		FlyAttackCharged = true;
+		DivekickCharged = true;
 	}
 
 	void OnDestroy()

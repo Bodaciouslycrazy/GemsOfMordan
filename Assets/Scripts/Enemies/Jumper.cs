@@ -55,7 +55,7 @@ public class Jumper : GEntity, IDamageable {
 		else if(CurAIState == AIState.PREPARING_JUMP)
 		{
 			//wait, then jump
-			if(TimeInState >= JumpPrepareTime && GetGroundState() == GroundState.WALKING)
+			if(TimeInState >= JumpPrepareTime && IsGrounded())
 			{
 				//Jump
 				Vector2 j = new Vector2();
@@ -74,7 +74,7 @@ public class Jumper : GEntity, IDamageable {
 		else if(CurAIState == AIState.JUMPED)
 		{
 			//wait till you hit the ground, then go to idle.
-			if( TimeInState > JumpCooldownTime && GetGroundState() == GroundState.WALKING)
+			if( TimeInState > JumpCooldownTime && IsGrounded())
 			{
 				SetAIState(AIState.IDLE);
 			}
