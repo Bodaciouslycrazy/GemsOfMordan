@@ -16,6 +16,7 @@ public class Health : MonoBehaviour {
 
 	const float BLINK_LENGTH = .08f;
 
+	private bool Dead = false;
 	private float CurBlinkTime = 0f;
 	private bool Blinking = false;
 
@@ -72,7 +73,7 @@ public class Health : MonoBehaviour {
 
 	public void Hurt(int dam)
 	{
-		if (Invincible)
+		if (Invincible || Dead)
 			return;
 
 		CurHealth -= dam;
@@ -84,6 +85,7 @@ public class Health : MonoBehaviour {
 		else
 		{
 			CurHealth = 0;
+			Dead = true;
 			TriggerOnDeath();
 		}
 	}

@@ -213,7 +213,8 @@ MonoBehaviour:
   MoveSpeed: 5
   TargetDist: 1
   FireDelay: 1
-  FireCooldown: 1
+  FireCooldown: 0.2
+  FireReset: 1.2
   ProjectileSpeed: 10
   StunLength: 0.5
   PitchSpeed: 1

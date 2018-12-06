@@ -11,7 +11,8 @@ public class Zapper : GEntity, IDamageable {
 	public float MoveSpeed = 2.5f;
 	public float TargetDist = 1f;
 	public float FireDelay = 1f;
-	public float FireCooldown = 1f;
+	public float FireCooldown = 0.2f;
+	public float FireReset = 1.2f;
 	public float ProjectileSpeed = 5;
 
 	public float StunLength = .5f;
@@ -21,8 +22,8 @@ public class Zapper : GEntity, IDamageable {
 
 	public AudioClip SFire;
 
+	private float TimeTillFire = 0f;
 	private List<Vector2> CurPath;
-
 	private AudioSource ChargeAudioSource;
 
 	public AIState CurAIState = AIState.IDLE;
@@ -63,6 +64,7 @@ public class Zapper : GEntity, IDamageable {
 	{
 		UpdateGroundState();
 		TimeInState += Time.fixedDeltaTime;
+		TimeTillFire -= Time.fixedDeltaTime;
 
 		if(CurAIState == AIState.IDLE)
 		{
@@ -81,19 +83,23 @@ public class Zapper : GEntity, IDamageable {
 		{
 			if (CurPath == null)
 				SetAIState(AIState.IDLE);
-			else if (CurPath.Count > 1 && Vector2.Distance(transform.position, CurPath[0]) < 0.3)
+			else if (CurPath.Count > 1 && Vector2.Distance(transform.position, CurPath[0]) < 0.15)
+			{
 				CurPath.RemoveAt(0);
+
+				if (IsInLOS())
+				{
+					SetAIState(AIState.ALIGNING);
+				}
+			}
 
 			if ((CurPath[0].x > transform.position.x) != GetFacingRight())
 				SetFacingRight(!GetFacingRight());
 
 			rb.MovePosition(Vector3.MoveTowards(transform.position, CurPath[0], Time.fixedDeltaTime * MoveSpeed));
 
-			if(IsInLOS())
-			{
-				SetAIState(AIState.ALIGNING);
-			}
-			else if(TimeInState >= 1.2f)
+			
+			if(TimeInState >= 1.2f)
 			{
 				GetPath();
 				SetAIState(AIState.PATHING);
@@ -130,7 +136,7 @@ public class Zapper : GEntity, IDamageable {
 				GetPath();
 				SetAIState(AIState.PATHING);
 			}
-			else if(dy == 0 && diff.magnitude <= 5)
+			else if(dy == 0 && diff.magnitude <= 5 && TimeTillFire <= 0)
 			{
 				//State transition to charging!
 				SetAIState(AIState.CHARGING);
@@ -164,6 +170,7 @@ public class Zapper : GEntity, IDamageable {
 
 	public void Fire()
 	{
+		TimeTillFire = FireReset;
 		AudioSource fas = SoundManager.Singleton.GenerateSound(transform.position, 1f);
 		fas.clip = SFire;
 		fas.Play();
