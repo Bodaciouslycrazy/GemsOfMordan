@@ -508,7 +508,7 @@ public class PlayerController : GEntity, IDamageable {
 
 	private IEnumerator DiveKick()
 	{
-		if (IsGrounded())
+		if (!IsGrounded())
 		{
 			Attacking = true;
 			DivekickCharged = false;
